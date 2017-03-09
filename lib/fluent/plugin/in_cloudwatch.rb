@@ -1,12 +1,15 @@
 require 'fluent/plugin/input'
 require 'fluent/plugin/parser'
+require 'fluentd/config/error'
 require 'aws-sdk'
 require 'pathname'
 require 'yaml'
 
 module Fluent::Plugin
   class Cloudwatch < Input
-    Plugin.register_input('cloudwatch', self)
+
+    Fluent::Plugin.register_input('cloudwatch', self)
+    helpers :parser, :compat_parameters
 
     desc 'The region of the source cloudwatch logs'
     config_param :region, :string
@@ -65,6 +68,10 @@ module Fluent::Plugin
       @parser = Fluent::TextParser.new
       @parser.configure(conf)
     end
+  end
+
+  def emit(log_event)
+    # TODO: I need to do something useful
   end
 
   def run
@@ -170,9 +177,11 @@ module Fluent::Plugin
     end
 
     def prune(log_groups)
-      before = self.keys.size
+      groups_before = self.keys.size
       self.delete_if { |k,v| true unless log_groups.key?(k) }
       log.info("Pruned #{before - self.keys.size} keys from state file")
+
+      # TODO: also prune streams as these are most likely to be transient
     end
   end
 
