@@ -5,8 +5,8 @@ require 'aws-sdk'
 require 'pathname'
 require 'yaml'
 
-module Fluent::Plugin #:nodoc: all
-  class Cloudwatch < Input #:nodoc: all
+module Fluent::Plugin
+  class Cloudwatch < Input
     Fluent::Plugin.register_input('cloudwatch', self)
     helpers :parser, :compat_parameters
 
@@ -47,7 +47,8 @@ module Fluent::Plugin #:nodoc: all
         role_session_name: @sts_session_name
       )
 
-      log.info("Using STS for authentication with source account ARN: #{@sts_arn}, session name: #{@sts_session_name}")
+      log.info("Using STS for authentication with source account ARN:
+        #{@sts_arn}, session name: #{@sts_session_name}")
     else
       log.info('Using local instance IAM role for authentication')
     end
