@@ -2,3 +2,11 @@ Metrics/MethodLength:
   Max: 200
 Style/Documentation:
   Enabled: false
+Style/ClassAndModuleChildren:
+  Enabled: false
+Metrics/ModuleLength:
+  Enabled: false
+Style/RedundantReturn:
+  Enabled: false
+Metrics/AbcSize:
+  Enabled: false
