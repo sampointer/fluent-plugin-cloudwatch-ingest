@@ -191,6 +191,7 @@ module Fluent::Plugin
 
       # Attempt to obtain an exclusive flock on the file and raise and
       # exception if we can't
+      log.info("Obtaining exclusive lock on state file #{statefile}")
       lockstatus = statefile.flock(File::LOCK_EX | File::LOCK_NB)
       raise Cloudwatch::State::LockFailed if lockstatus == false
 
