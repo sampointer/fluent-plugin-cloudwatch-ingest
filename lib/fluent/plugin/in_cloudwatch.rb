@@ -92,6 +92,8 @@ module Fluent::Plugin
         next_token = response.next_token
       rescue => boom
         log.error("Unable to retrieve log groups: #{boom}")
+        next_token = nil
+        retry
       end
     end
     log.info("Found #{log_groups.size} log groups")
@@ -116,6 +118,9 @@ module Fluent::Plugin
       rescue => boom
         log.error("Unable to retrieve log streams for group #{group}
           with stream prefix #{log_stream_name_prefix}: #{boom}")
+        log_streams = []
+        next_token = nil
+        retry
       end
     end
     log.info("Found #{log_streams.size} streams for #{log_group_name}")
@@ -161,6 +166,7 @@ module Fluent::Plugin
           rescue => boom
             log.error("Unable to retrieve events for stream
               #{stream} in group #{group}: #{boom}")
+            retry
           end
         end
       end
