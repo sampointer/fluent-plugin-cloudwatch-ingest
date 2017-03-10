@@ -32,4 +32,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rubocop'
 
   spec.add_dependency 'fluentd', '~>0.14.13'
+  spec.add_dependency 'aws-sdk', '~>2.8.4'
 end
