@@ -5,7 +5,7 @@ require 'fluent/plugin/cloudwatch/ingest/version'
 
 Gem::Specification.new do |spec|
   spec.name          = "fluent-plugin-cloudwatch-ingest"
-  spec.version       = Fluent::Plugin::Cloudwatch::VERSION
+  spec.version       = Fluent::Plugin::Cloudwatch::Ingest::VERSION
   spec.authors       = ["Sam Pointer"]
   spec.email         = ["san@outsidethe.net"]
 
