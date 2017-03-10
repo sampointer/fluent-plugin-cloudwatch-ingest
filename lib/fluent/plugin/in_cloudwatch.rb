@@ -125,7 +125,13 @@ module Fluent::Plugin
 
   def run
     until @finished
-      state = State.new(@state_file_name)
+      begin
+        state = State.new(@state_file_name)
+      rescue Cloudwatch::State::LockFailed
+        log.info("Failed to obtain state lock. Sleeping for #{@interval}")
+        sleep @interval
+        retry
+      end
 
       # Fetch the streams for each log group
       log_groups(@log_group_name_prefix).each do |group|
@@ -162,16 +168,18 @@ module Fluent::Plugin
       log.info('Pruning and saving state')
       state.prune(log_groups) # Remove dead streams
       state.save
+      state.close
       log.info("Pausing for #{@interval}")
       sleep @interval
     end
   end
 
   class Cloudwatch::State < Hash
-    attr_accessor :statefile, :lock
+    class LockFailed < RuntimeError; end
+    attr_accessor :statefile
 
     def initialize(filepath)
-      self.statefile = Pathname.new(filepath)
+      self.statefile = Pathname.new(filepath).open('w')
       unless statefile.exists?
         log.warn("State file #{statefile} does not exist. Creating a new one.")
         begin
@@ -180,6 +188,11 @@ module Fluent::Plugin
           log.error("Unable to create new state file #{statefile}: #{boom}")
         end
       end
+
+      # Attempt to obtain an exclusive flock on the file and raise and
+      # exception if we can't
+      lockstatus = statefile.flock(File::LOCK_EX | File::LOCK_NB)
+      raise Cloudwatch::State::LockFailed if lockstatus == false
 
       begin
         merge!(YAML.safe_load(statefile.read))
@@ -190,12 +203,14 @@ module Fluent::Plugin
     end
 
     def save
-      file = File.open(statefile, 'w')
-      file.write(self)
-      file.close
+      statefile.write(self)
       log.info("Saved state to #{statefile}")
     rescue => boom
       log.error("Unable to write state file #{statefile}: #{boom}")
+    end
+
+    def close
+      statefile.close
     end
 
     def prune(log_groups)
