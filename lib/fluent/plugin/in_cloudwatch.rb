@@ -43,7 +43,7 @@ module Fluent::Plugin
     aws_options = Hash.new
     Aws.config[:region] = @region
     if @sts_enabled
-      aws_options = [:credentials] = Aws::AssumeRoleCredentials.new(
+      aws_options[:credentials] = Aws::AssumeRoleCredentials.new(
               role_arn: @sts_arn,
               role_session_name: @sts_session_name
         )
@@ -52,7 +52,7 @@ module Fluent::Plugin
     else
       log.info("Using local instance IAM role for authentication")
     end
-    @aws = Aws::CloudWatchLogs::Client.new(options)
+    @aws = Aws::CloudWatchLogs::Client.new(aws_options)
     @finished = false
     @thread = Thread.new(&method(:run))
   end
@@ -158,8 +158,8 @@ module Fluent::Plugin
       end
 
       begin
-        self.merge! = YAML.load(self.statefile.read)
-        log.info("Loaded state for #{self.keys.size} log groups from #{self.statefile}"
+        self.merge!(YAML.load(self.statefile.read))
+        log.info("Loaded state for #{self.keys.size} log groups from #{self.statefile}")
       rescue => boom
         log.error("Unable to read state file #{statefile}: #{boom}")
       end
