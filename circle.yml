@@ -1,3 +1,5 @@
 test:
   override:
     - bundle exec rake
+  post:
+    - cp pkg/*.gem ${CIRCLE_ARTIFACTS}
