@@ -26,6 +26,8 @@ module Fluent::Plugin
     config_param :state_file_name, :string, default: '/var/spool/td-agent/cloudwatch.state' # rubocop:disable all
     desc 'Fetch logs every interval'
     config_param :interval, :time, default: 60
+    desc 'Time to pause between API call failures'
+    config_param :api_interval, :time, default: 120
   end
 
   def initialize
@@ -93,6 +95,7 @@ module Fluent::Plugin
       rescue => boom
         log.error("Unable to retrieve log groups: #{boom}")
         next_token = nil
+        sleep @api_interval
         retry
       end
     end
@@ -120,6 +123,7 @@ module Fluent::Plugin
           with stream prefix #{log_stream_name_prefix}: #{boom}")
         log_streams = []
         next_token = nil
+        sleep @api_interval
         retry
       end
     end
@@ -166,6 +170,7 @@ module Fluent::Plugin
           rescue => boom
             log.error("Unable to retrieve events for stream
               #{stream} in group #{group}: #{boom}")
+            sleep @api_interval
             retry
           end
         end
