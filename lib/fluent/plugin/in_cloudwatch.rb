@@ -5,8 +5,8 @@ require 'aws-sdk'
 require 'pathname'
 require 'yaml'
 
-module Fluent::Plugin
-  class Cloudwatch < Input
+module Fluent::Plugin #:nodoc: all
+  class Cloudwatch < Input #:nodoc: all
     Fluent::Plugin.register_input('cloudwatch', self)
     helpers :parser, :compat_parameters
 
@@ -173,7 +173,7 @@ module Fluent::Plugin
     def prune(log_groups)
       groups_before = keys.size
       delete_if { |k, _v| true unless log_groups.key?(k) }
-      log.info("Pruned #{before - keys.size} keys from state file")
+      log.info("Pruned #{groups_before - keys.size} keys from state file")
 
       # TODO: also prune streams as these are most likely to be transient
     end
