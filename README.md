@@ -50,11 +50,11 @@ attempt to `sts:AssumeRole` the `sts_arn`. This is useful for fetching logs from
 Both the `log_group_name_prefix` and `log_stream_name_prefix` may be omitted, in which case all groups and streams will be ingested. For performance reasons it is often desirable to set the `log_stream_name_prefix` to be today's date, managed by a configuration management system.
 
 ### State file
-The state file is a YAML serialization of the current ingestion state. When running in a HA configuration this should be placed on a shared filesystem, such as EFS. The `lock_state_file` attribute should also be set. See below for more detail.
+The state file is a YAML serialization of the current ingestion state. When running in a HA configuration this should be placed on a shared filesystem, such as EFS.
+The state file is opened with an exclusive write call and as such also functions as a lock file in HA configurations. See below.
 
 ### HA Setup
-
-When the state file is location on a shared filesystem and the `lock_state_file` attribute is set an exclusive write lock will attempted each `interval`.
+When the state file is location on a shared filesystem an exclusive write lock will attempted each `interval`.
 With this option in effect it is safe to run multiple instances of this plugin consuming from the same CloudWatch logging source without fear of duplication.
 In a properly configured auto-scaling group this provides for uninterrupted log ingestion in the event of a failure of any single node.
 

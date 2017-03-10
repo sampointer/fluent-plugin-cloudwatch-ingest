@@ -168,7 +168,7 @@ module Fluent::Plugin
   end
 
   class Cloudwatch::State < Hash
-    attr_accessor :statefile
+    attr_accessor :statefile, :lock
 
     def initialize(filepath)
       self.statefile = Pathname.new(filepath)
