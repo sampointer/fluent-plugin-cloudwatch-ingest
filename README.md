@@ -56,7 +56,7 @@ The state file is a YAML serialization of the current ingestion state. When runn
 The state file is opened with an exclusive write call and as such also functions as a lock file in HA configurations. See below.
 
 ### HA Setup
-When the state file is location on a shared filesystem an exclusive write lock will attempted each `interval`.
+When the state file is located on a shared filesystem an exclusive write lock will attempted each `interval`.
 As such it is safe to run multiple instances of this plugin consuming from the same CloudWatch logging source without fear of duplication, as long as they share a state file.
 In a properly configured auto-scaling group this provides for uninterrupted log ingestion in the event of a failure of any single node.
 
@@ -68,5 +68,5 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/fluent-plugin-cloudwatch-ingest.
+Bug reports and pull requests are welcome on GitHub at https://github.com/sampointer/fluent-plugin-cloudwatch-ingest.
 
