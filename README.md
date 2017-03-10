@@ -55,7 +55,7 @@ The state file is opened with an exclusive write call and as such also functions
 
 ### HA Setup
 When the state file is location on a shared filesystem an exclusive write lock will attempted each `interval`.
-With this option in effect it is safe to run multiple instances of this plugin consuming from the same CloudWatch logging source without fear of duplication.
+As such it is safe to run multiple instances of this plugin consuming from the same CloudWatch logging source without fear of duplication, as long as they share a state file.
 In a properly configured auto-scaling group this provides for uninterrupted log ingestion in the event of a failure of any single node.
 
 ## Development
