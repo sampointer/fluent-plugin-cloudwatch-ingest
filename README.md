@@ -34,6 +34,7 @@ Or install it yourself as:
   region us-east-1
   sts_enabled true
   sts_arn arn:aws:iam::123456789012:role/role_in_another_account
+  sts_session_name fluentd-dev
   log_group_name_prefix /aws/lambda
   log_stream_name_prefix 2017
   state_file_name /mnt/nfs/cloudwatch.state
