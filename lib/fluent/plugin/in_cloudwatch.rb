@@ -11,7 +11,7 @@ module Fluent::Plugin
     helpers :parser, :compat_parameters
 
     desc 'The region of the source cloudwatch logs'
-    config_param :region, :string
+    config_param :region, :string, default: 'us-east-1'
     desc 'Enable STS for cross-account IAM'
     config_param :sts_enabled, :bool, default: false
     desc 'The IAM role ARN in the source account to use when STS is enabled'
@@ -49,6 +49,7 @@ module Fluent::Plugin
         role_session_name: @sts_session_name
       )
 
+      log.info("Working in region #{@region}")
       log.info("Using STS for authentication with source account ARN:
         #{@sts_arn}, session name: #{@sts_session_name}")
     else
@@ -137,7 +138,7 @@ module Fluent::Plugin
       begin
         state = State.new(@state_file_name)
       rescue => boom
-        log.info("Failed to obtain state lock. Sleeping for #{@interval}: #{boom}")
+        log.info("Failed to get state lock. Sleeping for #{@interval}: #{boom}")
         sleep @interval
         retry
       end

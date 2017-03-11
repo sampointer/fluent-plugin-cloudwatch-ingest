@@ -10,3 +10,5 @@ Style/RedundantReturn:
   Enabled: false
 Metrics/AbcSize:
   Enabled: false
+Metrics/CyclomaticComplexity:
+  Max: 10
