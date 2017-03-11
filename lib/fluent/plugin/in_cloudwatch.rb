@@ -136,8 +136,8 @@ module Fluent::Plugin
     until @finished
       begin
         state = State.new(@state_file_name)
-      rescue Cloudwatch::State::LockFailed
-        log.info("Failed to obtain state lock. Sleeping for #{@interval}")
+      rescue => boom
+        log.info("Failed to obtain state lock. Sleeping for #{@interval}: #{boom}")
         sleep @interval
         retry
       end
@@ -178,8 +178,12 @@ module Fluent::Plugin
 
       log.info('Pruning and saving state')
       state.prune(log_groups) # Remove dead streams
-      state.save
-      state.close
+      begin
+        state.save
+        state.close
+      rescue
+        log.error("Unable to save state file: #{boom}")
+      end
       log.info("Pausing for #{@interval}")
       sleep @interval
     end
@@ -206,19 +210,13 @@ module Fluent::Plugin
       lockstatus = statefile.flock(File::LOCK_EX | File::LOCK_NB)
       raise Cloudwatch::State::LockFailed if lockstatus == false
 
-      begin
-        merge!(YAML.safe_load(statefile.read))
-        log.info("Loaded state for #{keys.size} log groups from #{statefile}")
-      rescue => boom
-        log.error("Unable to read state file #{statefile}: #{boom}")
-      end
+      merge!(YAML.safe_load(statefile.read))
+      log.info("Loaded state for #{keys.size} log groups from #{statefile}")
     end
 
     def save
       statefile.write(self)
-      log.info("Saved state to #{statefile}")
-    rescue => boom
-      log.error("Unable to write state file #{statefile}: #{boom}")
+      log.info("Saved state to #{YAML.dump(statefile)}")
     end
 
     def close
