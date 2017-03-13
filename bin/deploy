@@ -3,5 +3,5 @@
 # deploy to rubygems.
 
 gem=$(ls pkg/*.gem | tail -1)
-sed -i "s/REPLACEME/${rubygems_api_key}/g" ../.gem/credentials
+sed -i "s/REPLACEME/${rubygems_api_key}/g" .gem/credentials
 gem push ${gem}
