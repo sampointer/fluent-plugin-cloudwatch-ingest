@@ -3,6 +3,7 @@
 # deploy to rubygems.
 
 gem=$(ls pkg/*.gem | tail -1)
-cp assets/credentials ~/.gem/credentials
+mkdir -p /home/ubuntu/.gem/credentials
+cp assets/credentials /home/ubuntu/.gem/credentials
 sed -i "s/REPLACEME/${rubygems_api_key}/g" .gem/credentials
 gem push ${gem}
