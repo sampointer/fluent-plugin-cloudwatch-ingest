@@ -3,3 +3,9 @@ test:
     - bundle exec rake
   post:
     - cp pkg/*.gem ${CIRCLE_ARTIFACTS}
+deployment:
+  release:
+    tag: /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$/
+    owner: sampointer
+    commands:
+      - gem push $(ls pkg/*.gem | tail -1) -k ${rubygems_api_key}
