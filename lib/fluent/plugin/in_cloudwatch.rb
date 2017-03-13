@@ -36,7 +36,6 @@ module Fluent::Plugin
 
   def configure(conf)
     super
-    configure_parser(conf)
   end
 
   def start
@@ -66,13 +65,6 @@ module Fluent::Plugin
   end
 
   private
-
-  def configure_parser(conf)
-    if conf[:format] # rubocop:disable all
-      @parser = Fluent::TextParser.new
-      @parser.configure(conf)
-    end
-  end
 
   def emit(log_event)
     # TODO: I need to do something useful
