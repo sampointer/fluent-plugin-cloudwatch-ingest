@@ -1,6 +1,6 @@
 require 'fluent/plugin/input'
 require 'fluent/plugin/parser'
-require 'fluentd/config/error'
+require 'fluent/config/error'
 require 'aws-sdk'
 require 'pathname'
 require 'yaml'
