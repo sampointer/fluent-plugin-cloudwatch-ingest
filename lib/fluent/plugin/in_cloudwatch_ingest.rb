@@ -214,8 +214,8 @@ module Fluent::Plugin
     end
 
     def save
-      statefile.write(self)
-      log.info("Saved state to #{YAML.dump(statefile)}")
+      statefile.write(YAML.dump(self))
+      log.info("Saved state to #{statefile}")
     end
 
     def close
