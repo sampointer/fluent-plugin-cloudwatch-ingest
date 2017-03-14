@@ -32,23 +32,28 @@ module Fluent::Plugin
 
   def initialize
     super
+    log.info('Starting fluentd-plugin-cloudwatch-ingest')
   end
 
   def configure(conf)
     super
+    log.info('Configured fluentd-plugin-cloudwatch-ingest')
   end
 
   def start
+    log.info('Started fluentd-plugin-cloudwatch-ingest')
+
     # Get a handle to Cloudwatch
     aws_options = {}
     Aws.config[:region] = @region
+    log.info("Working in region #{@region}")
+
     if @sts_enabled
       aws_options[:credentials] = Aws::AssumeRoleCredentials.new(
         role_arn: @sts_arn,
         role_session_name: @sts_session_name
       )
 
-      log.info("Working in region #{@region}")
       log.info("Using STS for authentication with source account ARN:
         #{@sts_arn}, session name: #{@sts_session_name}")
     else
