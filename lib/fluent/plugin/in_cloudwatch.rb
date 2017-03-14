@@ -15,7 +15,7 @@ module Fluent::Plugin
     desc 'Enable STS for cross-account IAM'
     config_param :sts_enabled, :bool, default: false
     desc 'The IAM role ARN in the source account to use when STS is enabled'
-    config_param :sts_arn, :string, default: ""
+    config_param :sts_arn, :string, default: ''
     desc 'The session name for use with STS'
     config_param :sts_session_name, :string, default: 'fluentd'
     desc 'Log group name or prefix. Not setting means "all"'
