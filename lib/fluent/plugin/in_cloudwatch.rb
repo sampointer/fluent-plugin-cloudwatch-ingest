@@ -41,6 +41,7 @@ module Fluent::Plugin
   end
 
   def start
+    super
     log.info('Started fluentd-plugin-cloudwatch-ingest')
 
     # Get a handle to Cloudwatch
