@@ -8,7 +8,7 @@ require 'yaml'
 module Fluent::Plugin
   class Cloudwatch < Input
     Fluent::Plugin.register_input('cloudwatch', self)
-    helpers :parser, :compat_parameters
+    helpers :compat_parameters
 
     desc 'The region of the source cloudwatch logs'
     config_param :region, :string, default: 'us-east-1'
