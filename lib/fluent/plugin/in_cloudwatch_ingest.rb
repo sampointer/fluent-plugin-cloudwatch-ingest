@@ -6,8 +6,8 @@ require 'pathname'
 require 'yaml'
 
 module Fluent::Plugin
-  class Cloudwatch < Input
-    Fluent::Plugin.register_input('cloudwatch', self)
+  class CloudwatchIngestInput < Fluent::Plugin::Input
+    Fluent::Plugin.register_input('cloudwatch_ingest', self)
     helpers :compat_parameters
 
     desc 'The region of the source cloudwatch logs'
@@ -188,7 +188,7 @@ module Fluent::Plugin
     end
   end
 
-  class Cloudwatch::State < Hash
+  class CloudwatchIngestInput::State < Hash
     class LockFailed < RuntimeError; end
     attr_accessor :statefile
 
@@ -207,7 +207,7 @@ module Fluent::Plugin
       # exception if we can't
       log.info("Obtaining exclusive lock on state file #{statefile}")
       lockstatus = statefile.flock(File::LOCK_EX | File::LOCK_NB)
-      raise Cloudwatch::State::LockFailed if lockstatus == false
+      raise CloudwatchIngestInput::State::LockFailed if lockstatus == false
 
       merge!(YAML.safe_load(statefile.read))
       log.info("Loaded state for #{keys.size} log groups from #{statefile}")
