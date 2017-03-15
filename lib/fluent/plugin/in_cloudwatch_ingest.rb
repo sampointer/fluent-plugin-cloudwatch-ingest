@@ -191,10 +191,12 @@ module Fluent::Plugin
       attr_accessor :statefile
 
       def initialize(filepath, log)
-        self.statefile = Pathname.new(filepath).open('r+')
-        unless File.exist?(statefile)
+        if File.exist?(statefile)
+          self.statefile = Pathname.new(filepath).open('r+')
+        else
           log.warn("No state file #{statefile} Creating a new one.")
           begin
+            self.statefile = Pathname.new(filepath).open('w+')
             save
           rescue => boom
             log.error("Unable to create new state file #{statefile}: #{boom}")
@@ -212,6 +214,7 @@ module Fluent::Plugin
       end
 
       def save
+        statefile.rewind
         statefile.write(YAML.dump(self))
         log.info("Saved state to #{statefile}")
       end
