@@ -127,8 +127,8 @@ module Fluent::Plugin
                      end
 
           response.log_streams.each { |s| log_streams << s.log_stream_name }
-          break unless reponse.next_token
-          next_token = reponse.next_token
+          break unless response.next_token
+          next_token = response.next_token
         rescue => boom
           log.error("Unable to retrieve log streams for group #{log_group_name} with stream prefix #{log_stream_name_prefix}: #{boom}") # rubocop:disable all
           log_streams = []
