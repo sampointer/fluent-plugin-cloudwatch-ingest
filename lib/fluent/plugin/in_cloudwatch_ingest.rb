@@ -115,13 +115,13 @@ module Fluent::Plugin
         begin
           response = if !log_stream_name_prefix.empty?
                        @aws.describe_log_streams(
-                         log_group_name: group,
+                         log_group_name: log_group_name,
                          log_stream_name_prefix: log_stream_name_prefix,
                          next_token: next_token
                        )
                      else
                        @aws.describe_log_streams(
-                         log_group_name: group,
+                         log_group_name: log_group_name,
                          next_token: next_token
                        )
                      end
@@ -130,8 +130,7 @@ module Fluent::Plugin
           break unless reponse.next_token
           next_token = reponse.next_token
         rescue => boom
-          log.error("Unable to retrieve log streams for group #{group}
-            with stream prefix #{log_stream_name_prefix}: #{boom}")
+          log.error("Unable to retrieve log streams for group #{group} with stream prefix #{log_stream_name_prefix}: #{boom}") # rubocop:disable all
           log_streams = []
           next_token = nil
           sleep @api_interval
