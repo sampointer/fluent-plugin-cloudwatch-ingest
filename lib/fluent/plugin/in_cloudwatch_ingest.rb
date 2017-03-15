@@ -46,6 +46,7 @@ module Fluent::Plugin
       # Get a handle to Cloudwatch
       aws_options = {}
       Aws.config[:region] = @region
+      Aws.config[:logger] = log
       log.info("Working in region #{@region}")
 
       if @sts_enabled
