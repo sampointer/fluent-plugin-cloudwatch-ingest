@@ -3,7 +3,7 @@ require 'fluent/plugin/parser'
 require 'fluent/config/error'
 require 'aws-sdk'
 require 'pathname'
-require 'yaml'
+require 'psych'
 
 module Fluent::Plugin
   class CloudwatchIngestInput < Fluent::Plugin::Input
@@ -191,32 +191,42 @@ module Fluent::Plugin
       attr_accessor :statefile
 
       def initialize(filepath, log)
+        @filepath = filepath
+        @log = log
+
         if File.exist?(statefile)
-          self.statefile = Pathname.new(filepath).open('r+')
+          self.statefile = Pathname.new(@filepath).open('r+')
         else
-          log.warn("No state file #{statefile} Creating a new one.")
+          @log.warn("No state file #{statefile} Creating a new one.")
           begin
-            self.statefile = Pathname.new(filepath).open('w+')
+            self.statefile = Pathname.new(@filepath).open('w+')
             save
           rescue => boom
-            log.error("Unable to create new state file #{statefile}: #{boom}")
+            @log.error("Unable to create new state file #{statefile}: #{boom}")
           end
         end
 
         # Attempt to obtain an exclusive flock on the file and raise and
         # exception if we can't
-        log.info("Obtaining exclusive lock on state file #{statefile}")
+        @log.info("Obtaining exclusive lock on state file #{statefile.to_s}")
         lockstatus = statefile.flock(File::LOCK_EX | File::LOCK_NB)
         raise CloudwatchIngestInput::State::LockFailed if lockstatus == false
 
-        merge!(YAML.safe_load(statefile.read))
-        log.info("Loaded state for #{keys.size} log groups from #{statefile}")
+        merge!(Psych.safe_load(statefile.read, [Fluent::Plugin::CloudwatchIngestInput::State]))
+        @log.info("Loaded state for #{keys.size} log groups from #{statefile}")
+      end
+
+      # http://stackoverflow.com/questions/12821534/ruby-yaml-parser-by-passing-constructor
+      def init_with(coder)
+        @filepath = coder['filepath']
+        @log = coder['log']
       end
 
       def save
         statefile.rewind
-        statefile.write(YAML.dump(self))
-        log.info("Saved state to #{statefile}")
+        statefile.write(Psych.dump(self))
+        @log.info("Saved state to #{statefile}")
+        statefile.rewind
       end
 
       def close
@@ -226,7 +236,7 @@ module Fluent::Plugin
       def prune(log_groups)
         groups_before = keys.size
         delete_if { |k, _v| true unless log_groups.key?(k) }
-        log.info("Pruned #{groups_before - keys.size} keys from state file")
+        @log.info("Pruned #{groups_before - keys.size} keys from state file")
 
         # TODO: also prune streams as these are most likely to be transient
       end
