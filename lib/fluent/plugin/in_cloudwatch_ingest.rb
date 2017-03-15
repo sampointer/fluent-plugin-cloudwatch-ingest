@@ -208,11 +208,11 @@ module Fluent::Plugin
 
         # Attempt to obtain an exclusive flock on the file and raise and
         # exception if we can't
-        @log.info("Obtaining exclusive lock on state file #{statefile.to_s}")
+        @log.info("Obtaining exclusive lock on state file #{statefile}")
         lockstatus = statefile.flock(File::LOCK_EX | File::LOCK_NB)
         raise CloudwatchIngestInput::State::LockFailed if lockstatus == false
 
-        merge!(Psych.safe_load(statefile.read, [Fluent::Plugin::CloudwatchIngestInput::State]))
+        merge!(Psych.safe_load(statefile.read, [Fluent::Plugin::CloudwatchIngestInput::State])) # rubocop:disable all
         @log.info("Loaded state for #{keys.size} log groups from #{statefile}")
       end
 
