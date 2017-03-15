@@ -146,7 +146,8 @@ module Fluent::Plugin
             # See if we have some stored state for this group and stream.
             # If we have then use the stored forward_token to pick up
             # from that point. Otherwise start from the start.
-            stream_token = (state[group][stream] if state[group][stream])
+            stream_token =
+              (state.store[group][stream] if state.store[group][stream])
 
             begin
               loop do
@@ -163,7 +164,7 @@ module Fluent::Plugin
 
               # Once all events for this stream have been processed,
               # store the forward token
-              state[group][stream] = response.next_forward_token
+              state.store[group][stream] = response.next_forward_token
             rescue => boom
               log.error("Unable to retrieve events for stream
                 #{stream} in group #{group}: #{boom}")
@@ -186,13 +187,14 @@ module Fluent::Plugin
       end
     end
 
-    class CloudwatchIngestInput::State < Hash
+    class CloudwatchIngestInput::State
       class LockFailed < RuntimeError; end
-      attr_accessor :statefile
+      attr_accessor :statefile, :store
 
       def initialize(filepath, log)
         @filepath = filepath
         @log = log
+        @store = {}
 
         if File.exist?(statefile)
           self.statefile = Pathname.new(@filepath).open('r+')
@@ -212,14 +214,17 @@ module Fluent::Plugin
         lockstatus = statefile.flock(File::LOCK_EX | File::LOCK_NB)
         raise CloudwatchIngestInput::State::LockFailed if lockstatus == false
 
-        merge!(Psych.safe_load(statefile.read, [Fluent::Plugin::CloudwatchIngestInput::State])) # rubocop:disable all
-        @log.info("Loaded state for #{keys.size} log groups from #{statefile}")
+        @store.merge!(Psych.safe_load(statefile.read, [Fluent::Plugin::CloudwatchIngestInput::State])) # rubocop:disable all
+        @log.info("Loaded #{@store.keys.size} log groups from #{statefile}")
       end
 
       # http://stackoverflow.com/questions/12821534/ruby-yaml-parser-by-passing-constructor
+      def encode_with(coder)
+        coder['store'] = @store
+      end
+
       def init_with(coder)
-        @filepath = @filepath ? @filepath : coder['filepath']
-        @log = @log ? @log : coder['log']
+        @store = coder['store']
       end
 
       def save
@@ -234,8 +239,8 @@ module Fluent::Plugin
       end
 
       def prune(log_groups)
-        groups_before = keys.size
-        delete_if { |k, _v| true unless log_groups.key?(k) }
+        groups_before = @store.keys.size
+        @store.delete_if { |k, _v| true unless log_groups.key?(k) }
         @log.info("Pruned #{groups_before - keys.size} keys from state file")
 
         # TODO: also prune streams as these are most likely to be transient
