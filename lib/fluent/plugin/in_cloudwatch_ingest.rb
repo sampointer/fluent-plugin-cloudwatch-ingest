@@ -191,7 +191,7 @@ module Fluent::Plugin
       attr_accessor :statefile
 
       def initialize(filepath, log)
-        self.statefile = Pathname.new(filepath).open('w')
+        self.statefile = Pathname.new(filepath).open('r+')
         unless File.exist?(statefile)
           log.warn("No state file #{statefile} Creating a new one.")
           begin
