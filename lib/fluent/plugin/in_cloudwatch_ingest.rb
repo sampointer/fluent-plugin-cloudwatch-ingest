@@ -71,7 +71,7 @@ module Fluent::Plugin
     private
 
     def emit(log_event)
-      # TODO: I need to do something useful
+      log.info(log_event)
     end
 
     def log_groups(log_group_prefix)
