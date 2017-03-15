@@ -54,8 +54,7 @@ module Fluent::Plugin
           role_session_name: @sts_session_name
         )
 
-        log.info("Using STS for authentication with source account ARN:
-          #{@sts_arn}, session name: #{@sts_session_name}")
+        log.info("Using STS for authentication with source account ARN: #{@sts_arn}, session name: #{@sts_session_name}") # rubocop:disable all
       else
         log.info('Using local instance IAM role for authentication')
       end
@@ -193,7 +192,7 @@ module Fluent::Plugin
 
       def initialize(filepath)
         self.statefile = Pathname.new(filepath).open('w')
-        unless statefile.exists?
+        unless File.exist?(statefile)
           log.warn("No state file #{statefile} Creating a new one.")
           begin
             save

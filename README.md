@@ -30,7 +30,7 @@ Or install it yourself as:
 ## Usage
 ```
 <source>
-  @type cloudwatch
+  @type cloudwatch_ingest
   region us-east-1
   sts_enabled true
   sts_arn arn:aws:iam::123456789012:role/role_in_another_account
