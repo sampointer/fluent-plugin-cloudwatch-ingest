@@ -71,7 +71,7 @@ module Fluent::Plugin
     private
 
     def emit(log_event)
-      log.info(log_event)
+      log.warn(log_event)
     end
 
     def log_groups(log_group_prefix)
@@ -81,16 +81,16 @@ module Fluent::Plugin
       next_token = nil
       loop do
         begin
-          if log_group_prefix.length > 0
-            response = @aws.describe_log_groups(
-              log_group_name_prefix: log_group_prefix,
-              next_token: next_token
-            )
-          else
-            response = @aws.describe_log_groups(
-              next_token: next_token
-            )
-          end
+          response = if !log_group_prefix.empty?
+                       @aws.describe_log_groups(
+                         log_group_name_prefix: log_group_prefix,
+                         next_token: next_token
+                       )
+                     else
+                       @aws.describe_log_groups(
+                         next_token: next_token
+                       )
+                     end
 
           response.log_groups.each { |g| log_groups << g.log_group_name }
           break unless response.next_token
@@ -112,18 +112,18 @@ module Fluent::Plugin
       next_token = nil
       loop do
         begin
-          if log_stream_name_prefix.length > 0
-            response = @aws.describe_log_streams(
-              log_group_name: group,
-              log_stream_name_prefix: log_stream_name_prefix,
-              next_token: next_token
-            )
-          else
-            response = @aws.describe_log_streams(
-              log_group_name: group,
-              next_token: next_token
-            )
-          end
+          response = if !log_stream_name_prefix.empty?
+                       @aws.describe_log_streams(
+                         log_group_name: group,
+                         log_stream_name_prefix: log_stream_name_prefix,
+                         next_token: next_token
+                       )
+                     else
+                       @aws.describe_log_streams(
+                         log_group_name: group,
+                         next_token: next_token
+                       )
+                     end
 
           response.log_streams.each { |s| log_streams << s.log_stream_name }
           break unless reponse.next_token
