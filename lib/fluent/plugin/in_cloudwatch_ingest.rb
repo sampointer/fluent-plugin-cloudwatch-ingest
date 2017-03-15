@@ -81,10 +81,16 @@ module Fluent::Plugin
       next_token = nil
       loop do
         begin
-          response = @aws.describe_log_groups(
-            log_group_name_prefix: log_group_prefix,
-            next_token: next_token
-          )
+          if log_group_prefix.length > 0
+            response = @aws.describe_log_groups(
+              log_group_name_prefix: log_group_prefix,
+              next_token: next_token
+            )
+          else
+            response = @aws.describe_log_groups(
+              next_token: next_token
+            )
+          end
 
           response.log_groups.each { |g| log_groups << g.log_group_name }
           break unless response.next_token
@@ -106,11 +112,18 @@ module Fluent::Plugin
       next_token = nil
       loop do
         begin
-          response = @aws.describe_log_streams(
-            log_group_name: group,
-            log_stream_name_prefix: log_stream_name_prefix,
-            next_token: next_token
-          )
+          if log_stream_name_prefix.length > 0
+            response = @aws.describe_log_streams(
+              log_group_name: group,
+              log_stream_name_prefix: log_stream_name_prefix,
+              next_token: next_token
+            )
+          else
+            response = @aws.describe_log_streams(
+              log_group_name: group,
+              next_token: next_token
+            )
+          end
 
           response.log_streams.each { |s| log_streams << s.log_stream_name }
           break unless reponse.next_token
@@ -196,7 +209,7 @@ module Fluent::Plugin
         @log = log
         @store = {}
 
-        if File.exist?(statefile)
+        if File.exist?(filepath)
           self.statefile = Pathname.new(@filepath).open('r+')
         else
           @log.warn("No state file #{statefile} Creating a new one.")
@@ -214,7 +227,7 @@ module Fluent::Plugin
         lockstatus = statefile.flock(File::LOCK_EX | File::LOCK_NB)
         raise CloudwatchIngestInput::State::LockFailed if lockstatus == false
 
-        @store.merge!(Psych.safe_load(statefile.read, [Fluent::Plugin::CloudwatchIngestInput::State])) # rubocop:disable all
+        @store.merge!(Psych.safe_load(statefile.read))
         @log.info("Loaded #{@store.keys.size} log groups from #{statefile}")
       end
 
