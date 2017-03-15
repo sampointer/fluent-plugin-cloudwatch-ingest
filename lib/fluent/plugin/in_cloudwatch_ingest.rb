@@ -218,8 +218,8 @@ module Fluent::Plugin
 
       # http://stackoverflow.com/questions/12821534/ruby-yaml-parser-by-passing-constructor
       def init_with(coder)
-        @filepath = coder['filepath']
-        @log = coder['log']
+        @filepath = @filepath ? @filepath : coder['filepath']
+        @log = @log ? @log : coder['log']
       end
 
       def save
