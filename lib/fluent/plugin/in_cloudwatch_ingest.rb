@@ -218,18 +218,9 @@ module Fluent::Plugin
         @log.info("Loaded #{@store.keys.size} log groups from #{statefile}")
       end
 
-      # http://stackoverflow.com/questions/12821534/ruby-yaml-parser-by-passing-constructor
-      def encode_with(coder)
-        coder['store'] = @store
-      end
-
-      def init_with(coder)
-        @store = coder['store']
-      end
-
       def save
         statefile.rewind
-        statefile.write(Psych.dump(self))
+        statefile.write(Psych.dump(@store))
         @log.info("Saved state to #{statefile}")
         statefile.rewind
       end
