@@ -132,7 +132,7 @@ module Fluent::Plugin
     def run
       until @finished
         begin
-          state = State.new(@state_file_name)
+          state = State.new(@state_file_name, log)
         rescue => boom
           log.info("Failed lock state. Sleeping for #{@interval}: #{boom}")
           sleep @interval
@@ -190,7 +190,7 @@ module Fluent::Plugin
       class LockFailed < RuntimeError; end
       attr_accessor :statefile
 
-      def initialize(filepath)
+      def initialize(filepath, log)
         self.statefile = Pathname.new(filepath).open('w')
         unless File.exist?(statefile)
           log.warn("No state file #{statefile} Creating a new one.")
