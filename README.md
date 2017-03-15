@@ -1,4 +1,4 @@
-# Fluent::Plugin::Cloudwatch::Ingest [![Circle CI](https://circleci.com/gh/sampointer/fluent-plugin-cloudwatch-ingest.svg?style=svg)](https://circleci.com/gh/sampointer/fluent-plugin-cloudwatch-ingest)
+# Fluent::Plugin::Cloudwatch::Ingest [![Circle CI](https://circleci.com/gh/sampointer/fluent-plugin-cloudwatch-ingest.svg?style=svg)](https://circleci.com/gh/sampointer/fluent-plugin-cloudwatch-ingest) [![Gem Version](https://badge.fury.io/rb/fluent-plugin-cloudwatch-ingest.svg)](https://badge.fury.io/rb/fluent-plugin-cloudwatch-ingest)
 
 **This gem is not yet ready for production release or use.**
 
