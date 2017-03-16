@@ -27,7 +27,7 @@ module Fluent::Plugin
     desc 'Fetch logs every interval'
     config_param :interval, :time, default: 60
     desc 'Time to pause between API call failures and limits'
-    config_param :api_interval, :time, default: 2
+    config_param :api_interval, :time, default: 5
 
     def initialize
       super
@@ -167,25 +167,19 @@ module Fluent::Plugin
             end
 
             begin
-              loop do
-                response = @aws.get_log_events(
-                  log_group_name: group,
-                  log_stream_name: stream,
-                  next_token: stream_token
-                )
+              response = @aws.get_log_events(
+                log_group_name: group,
+                log_stream_name: stream,
+                next_token: stream_token
+              )
 
-                emit(response.events)
-                sleep @api_interval
-                break unless response.next_forward_token
-                stream_token = response.next_forward_token
-              end
+              emit(response.events)
 
               # Once all events for this stream have been processed,
-              # store the forward token
+              # in this iteration, store the forward token
               state.store[group][stream] = response.next_forward_token
             rescue => boom
-              log.error("Unable to retrieve events for stream
-                #{stream} in group #{group}: #{boom}")
+              log.error("Unable to retrieve events for stream #{stream} in group #{group}: #{boom}") # rubocop:disable all
               sleep @api_interval
               retry
             end
