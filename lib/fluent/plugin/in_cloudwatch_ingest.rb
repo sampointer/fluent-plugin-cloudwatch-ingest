@@ -175,8 +175,8 @@ module Fluent::Plugin
                 )
 
                 emit(response.events)
-                break unless response.next_token
-                stream_token = response.next_token
+                break unless response.next_forward_token
+                stream_token = response.next_forward_token
               end
 
               # Once all events for this stream have been processed,
