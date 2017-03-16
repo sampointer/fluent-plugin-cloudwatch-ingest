@@ -26,7 +26,7 @@ module Fluent::Plugin
     config_param :state_file_name, :string, default: '/var/spool/td-agent/cloudwatch.state' # rubocop:disable all
     desc 'Fetch logs every interval'
     config_param :interval, :time, default: 60
-    desc 'Time to pause between API call failures'
+    desc 'Time to pause between API call failures and limits'
     config_param :api_interval, :time, default: 120
 
     def initialize
@@ -175,6 +175,7 @@ module Fluent::Plugin
                 )
 
                 emit(response.events)
+                sleep @api_interval
                 break unless response.next_forward_token
                 stream_token = response.next_forward_token
               end
