@@ -206,7 +206,7 @@ module Fluent::Plugin
       def initialize(filepath, log)
         @filepath = filepath
         @log = log
-        @store = Hash.new { |h,k| h[k] = {} }
+        @store = Hash.new { |h, k| h[k] = {} }
 
         if File.exist?(filepath)
           self.statefile = Pathname.new(@filepath).open('r+')
