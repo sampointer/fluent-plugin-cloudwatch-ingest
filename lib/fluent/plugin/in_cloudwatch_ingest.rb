@@ -27,7 +27,7 @@ module Fluent::Plugin
     desc 'Fetch logs every interval'
     config_param :interval, :time, default: 60
     desc 'Time to pause between API call failures and limits'
-    config_param :api_interval, :time, default: 120
+    config_param :api_interval, :time, default: 2
 
     def initialize
       super
