@@ -159,8 +159,12 @@ module Fluent::Plugin
             # See if we have some stored state for this group and stream.
             # If we have then use the stored forward_token to pick up
             # from that point. Otherwise start from the start.
-            stream_token =
-              (state.store[group][stream] if state.store[group][stream])
+            if state.store[group] && state.store[group][stream]
+              stream_token =
+                (state.store[group][stream] if state.store[group][stream])
+            else
+              stream_token = nil
+            end
 
             begin
               loop do

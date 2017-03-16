@@ -11,6 +11,8 @@ Style/RedundantReturn:
 Metrics/AbcSize:
   Enabled: false
 Metrics/CyclomaticComplexity:
-  Max: 10
+  Max: 20
 Metrics/ClassLength:
   Enabled: false
+Metrics/PerceivedComplexity:
+  Max: 14
