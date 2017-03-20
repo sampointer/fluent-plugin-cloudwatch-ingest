@@ -1,7 +1,8 @@
+require 'aws-sdk'
+require 'fluent/config/error'
 require 'fluent/plugin/input'
 require 'fluent/plugin/parser'
-require 'fluent/config/error'
-require 'aws-sdk'
+require 'json'
 require 'pathname'
 require 'psych'
 
@@ -28,6 +29,8 @@ module Fluent::Plugin
     config_param :interval, :time, default: 60
     desc 'Time to pause between API call failures and limits'
     config_param :api_interval, :time, default: 5
+    desc 'Tag to apply to record'
+    config_param :tag, :string, default: 'cloudwatch'
 
     def initialize
       super
@@ -71,8 +74,9 @@ module Fluent::Plugin
 
     private
 
-    def emit(log_event)
-      log.warn(log_event)
+    def emit(event)
+      message = JSON.parse(event.message)
+      router.emit(@tag, event.timestamp / 1000, event.message)
     end
 
     def log_groups(log_group_prefix)
@@ -173,7 +177,7 @@ module Fluent::Plugin
                 next_token: stream_token
               )
 
-              emit(response.events)
+              response.events.each { |e| emit(e) }
 
               # Once all events for this stream have been processed,
               # in this iteration, store the forward token
