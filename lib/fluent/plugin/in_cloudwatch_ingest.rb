@@ -187,7 +187,7 @@ module Fluent::Plugin
         end
 
         log.info('Pruning and saving state')
-        state.prune(log_groups) # Remove dead streams
+        state.prune(log_groups(@log_group_name_prefix)) # Remove dead streams
         begin
           state.save
           state.close
