@@ -39,6 +39,10 @@ module Fluent::Plugin
 
     def configure(conf)
       super
+      if conf[:format]
+        @parser = TextParser.new
+        @parser.configure(conf)
+      end
       log.info('Configured fluentd-plugin-cloudwatch-ingest')
     end
 
@@ -75,8 +79,13 @@ module Fluent::Plugin
     private
 
     def emit(event)
-      message = JSON.parse(event.message)
-      router.emit(@tag, event.timestamp / 1000, message)
+      if @parser
+        record = @parser.parse(event.message)
+        router.emit(@tag, event.timestamp / 1000, record[1])
+      else
+        record = JSON.parse(event.message)
+        router.emit(@tag, event.timestamp / 1000, record)
+      end
     end
 
     def log_groups(log_group_prefix)
