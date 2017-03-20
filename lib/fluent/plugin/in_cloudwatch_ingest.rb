@@ -78,11 +78,7 @@ module Fluent::Plugin
 
     def emit(event)
       time, record = @parser.parse(event.message)
-      unless time                               # If the time isn't parsed from
-        time = event.time / 1000                # the record then take it from
-      end                                       # the Cloudwatch event timestamp
-
-      router.emit(@tag, time, record[1])
+      router.emit(@tag, time, record)
     end
 
     def log_groups(log_group_prefix)
