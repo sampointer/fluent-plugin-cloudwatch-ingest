@@ -9,7 +9,7 @@ require 'psych'
 module Fluent::Plugin
   class CloudwatchIngestInput < Fluent::Plugin::Input
     Fluent::Plugin.register_input('cloudwatch_ingest', self)
-    helpers :compat_parameters
+    helpers :compat_parameters, :parser
 
     desc 'The region of the source cloudwatch logs'
     config_param :region, :string, default: 'us-east-1'
@@ -39,10 +39,8 @@ module Fluent::Plugin
 
     def configure(conf)
       super
-      if conf[:format]
-        @parser = TextParser.new
-        @parser.configure(conf)
-      end
+      compat_parameters_convert(conf, :parser)
+      @parser = parser_create
       log.info('Configured fluentd-plugin-cloudwatch-ingest')
     end
 
@@ -79,13 +77,12 @@ module Fluent::Plugin
     private
 
     def emit(event)
-      if @parser
-        record = @parser.parse(event.message)
-        router.emit(@tag, event.timestamp / 1000, record[1])
-      else
-        record = JSON.parse(event.message)
-        router.emit(@tag, event.timestamp / 1000, record)
-      end
+      time, record = @parser.parse(event.message)
+      unless time                               # If the time isn't parsed from
+        time = event.time / 1000                # the record then take it from
+      end                                       # the Cloudwatch event timestamp
+
+      router.emit(@tag, time, record[1])
     end
 
     def log_groups(log_group_prefix)
