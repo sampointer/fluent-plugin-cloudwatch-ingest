@@ -76,7 +76,7 @@ module Fluent::Plugin
 
     def emit(event)
       message = JSON.parse(event.message)
-      router.emit(@tag, event.timestamp / 1000, event.message)
+      router.emit(@tag, event.timestamp / 1000, message)
     end
 
     def log_groups(log_group_prefix)
