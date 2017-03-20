@@ -244,7 +244,7 @@ module Fluent::Plugin
       def prune(log_groups)
         groups_before = @store.keys.size
         @store.delete_if { |k, _v| true unless log_groups.include?(k) }
-        @log.info("Pruned #{groups_before - keys.size} keys from state file")
+        @log.info("Pruned #{groups_before - @store.keys.size} keys from store")
 
         # TODO: also prune streams as these are most likely to be transient
       end
