@@ -184,10 +184,12 @@ module Fluent::Plugin
                 next_token: stream_token
               )
 
-              begin
-                response.events.each { |e| emit(e) }
-              rescue => boom
-                log.error("Failed to emit event #{e}: #{boom}")
+              response.events.each do |e|
+                begin
+                  emit(e)
+                rescue => boom
+                  log.error("Failed to emit event #{e}: #{boom}")
+                end
               end
 
               # Once all events for this stream have been processed,
