@@ -80,6 +80,8 @@ module Fluent::Plugin
     private
 
     def emit(event)
+      log.warn("Event class #{event.class}")
+      log.warn("Got event #{event}")
       time, record = @parser.parse(event.message)
       router.emit(@tag, time, record)
     end
@@ -182,7 +184,11 @@ module Fluent::Plugin
                 next_token: stream_token
               )
 
-              response.events.each { |e| emit(e) }
+              begin
+                response.events.each { |e| emit(e) }
+              rescue => boom
+                log.error("Failed to emit event #{e}: #{boom}")
+              end
 
               # Once all events for this stream have been processed,
               # in this iteration, store the forward token
