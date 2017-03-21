@@ -31,6 +31,9 @@ module Fluent::Plugin
     config_param :api_interval, :time, default: 5
     desc 'Tag to apply to record'
     config_param :tag, :string, default: 'cloudwatch'
+    config_section :parse do
+      config_set_default :@type, 'cloudwatch_ingest'
+    end
 
     def initialize
       super
