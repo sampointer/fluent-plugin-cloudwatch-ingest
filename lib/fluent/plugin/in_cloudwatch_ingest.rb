@@ -82,7 +82,7 @@ module Fluent::Plugin
     def emit(event)
       log.warn("Event class #{event.class}")
       log.warn("Got event #{event}")
-      time, record = @parser.parse(event.message)
+      time, record = @parser.parse(event)
       router.emit(@tag, time, record)
     end
 
