@@ -31,6 +31,7 @@ module Fluent::Plugin
     config_param :api_interval, :time, default: 5
     desc 'Tag to apply to record'
     config_param :tag, :string, default: 'cloudwatch'
+    config_param :aws_logging_enabled, :bool, default: false
     config_section :parse do
       config_set_default :@type, 'cloudwatch_ingest'
     end
@@ -54,7 +55,7 @@ module Fluent::Plugin
       # Get a handle to Cloudwatch
       aws_options = {}
       Aws.config[:region] = @region
-      Aws.config[:logger] = log
+      Aws.config[:logger] = log if @aws_logging
       log.info("Working in region #{@region}")
 
       if @sts_enabled
