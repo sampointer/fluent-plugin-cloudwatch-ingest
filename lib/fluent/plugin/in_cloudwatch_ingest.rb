@@ -82,8 +82,9 @@ module Fluent::Plugin
     def emit(event)
       log.warn("Event class #{event.class}")
       log.warn("Got event #{event}")
-      time, record = @parser.parse(event)
-      router.emit(@tag, time, record)
+      @parser.parse(event) do |time, record|
+        router.emit(@tag, time, record)
+      end
     end
 
     def log_groups(log_group_prefix)
