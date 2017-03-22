@@ -6,7 +6,7 @@ module Fluent
     class CloudwatchIngestParser < RegexpParser
       Plugin.register_parser('cloudwatch_ingest', self)
 
-      config_set_default :expression, '/(?<message>.+)'
+      config_set_default :expression, '^(?<message>.+)$'
       config_set_default :time_format, '%Y-%m-%d %H:%M:%S.%L'
 
       def parse(event)
