@@ -48,6 +48,16 @@ module Fluent::Plugin
       super
       compat_parameters_convert(conf, :parser)
       parser_config = conf.elements('parse').first
+      unless parser_config
+        raise Fluent::ConfigError, "<parse> section is required."
+      end
+      unless parser_config["expression"]
+        raise Fluent::ConfigError, "parse/expression is required."
+      end
+      unless parser_config["event_time"]
+        raise Fluent::ConfigError, "parse/event_time is required."
+      end
+
       @parser = parser_create(conf: parser_config)
       log.info('Configured fluentd-plugin-cloudwatch-ingest')
     end

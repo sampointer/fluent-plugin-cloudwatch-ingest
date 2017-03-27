@@ -41,6 +41,10 @@ Or install it yourself as:
   state_file_name /mnt/nfs/cloudwatch.state
   interval 120
   api_interval 300  # Time to wait between API call failures before retry
+  <parse>
+    expression ^(?<message>.+)$
+    event_time true  # Take time from the Cloudwatch event, rather than parse it from the body
+  </parse>
 </source>
 ```
 
