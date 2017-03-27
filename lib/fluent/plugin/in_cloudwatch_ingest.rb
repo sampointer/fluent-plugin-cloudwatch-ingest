@@ -36,6 +36,7 @@ module Fluent::Plugin
       config_set_default :@type, 'cloudwatch_ingest'
       config_set_default :expression, '^(?<message>.+)$'
       config_set_default :event_time, true
+      config_set_default :time_format, '%Y-%m-%d %H:%M:%S.%L'
     end
 
     def initialize
@@ -46,7 +47,8 @@ module Fluent::Plugin
     def configure(conf)
       super
       compat_parameters_convert(conf, :parser)
-      @parser = parser_create
+      parser_config = conf.elements('parse').first
+      @parser = parser_create(conf: parser_config)
       log.info('Configured fluentd-plugin-cloudwatch-ingest')
     end
 
