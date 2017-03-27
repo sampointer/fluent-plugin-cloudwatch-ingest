@@ -10,6 +10,14 @@ module Fluent
       config_set_default :time_format, '%Y-%m-%d %H:%M:%S.%L'
       config_set_default :event_time, true
 
+      def initiaize
+        super
+      end
+
+      def configure(conf)
+        super
+      end
+
       def parse(event)
         time = nil
         record = nil
