@@ -237,18 +237,18 @@ module Fluent::Plugin
             self.statefile = Pathname.new(@filepath).open('w+')
             save
           rescue => boom
-            @log.error("Unable to create new state file #{statefile}: #{boom}")
+            @log.error("Unable to create new file #{statefile.path}: #{boom}")
           end
         end
 
         # Attempt to obtain an exclusive flock on the file and raise and
         # exception if we can't
-        @log.info("Obtaining exclusive lock on state file #{statefile}")
+        @log.info("Obtaining exclusive lock on state file #{statefile.path}")
         lockstatus = statefile.flock(File::LOCK_EX | File::LOCK_NB)
         raise CloudwatchIngestInput::State::LockFailed if lockstatus == false
 
         @store.merge!(Psych.safe_load(statefile.read))
-        @log.info("Loaded #{@store.keys.size} log groups from #{statefile}")
+        @log.info("Loaded #{@store.keys.size} loggroups from #{statefile.path}")
       end
 
       def save
