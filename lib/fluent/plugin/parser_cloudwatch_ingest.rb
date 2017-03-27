@@ -21,7 +21,7 @@ module Fluent
         # We do String processing on the event time here to
         # avoid rounding errors introduced by floating point
         # arithmetic.
-        event_s  = event.timestamp.to_s[0..9]
+        event_s  = event.timestamp.to_s[0..9].to_i
         event_ns = event.timestamp.to_s[10..-1].to_i * 1_000_000
 
         time = Fluent::EventTime.new(event_s, event_ns) if @event_time
