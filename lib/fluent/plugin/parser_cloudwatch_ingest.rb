@@ -8,6 +8,7 @@ module Fluent
 
       config_set_default :expression, '^(?<message>.+)$'
       config_set_default :time_format, '%Y-%m-%d %H:%M:%S.%L'
+      config_set_default :event_time, true
 
       def parse(event)
         time = nil
@@ -23,10 +24,8 @@ module Fluent
         event_s  = event.timestamp.to_s[0..9]
         event_ns = event.timestamp.to_s[10..-1].to_i * 1_000_000
 
-        # If we cannot parse the time from the message itself (either because
-        # a time field is not included in the format, or it is not matched)
-        # then we take the time from the cloudwatch event time
-        time = time ? time : Fluent::EventTime.new(event_s, event_ns)
+        time = Fluent::EventTime.new(event_s, event_ns) if @event_time
+
         yield time, record
       end
     end

@@ -34,6 +34,8 @@ module Fluent::Plugin
     config_param :aws_logging_enabled, :bool, default: false
     config_section :parse do
       config_set_default :@type, 'cloudwatch_ingest'
+      config_set_default :expression, '^(?<message>.+)$'
+      config_set_default :event_time, true
     end
 
     def initialize
