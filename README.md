@@ -42,7 +42,8 @@ Or install it yourself as:
   interval 120
   api_interval 300  # Time to wait between API call failures before retry
   <parse>
-    expression ^(?<message>.+)$
+    @type cloudwatch_ingest
+    expression /^(?<message>.+)$/
     event_time true  # Take time from the Cloudwatch event, rather than parse it from the body
   </parse>
 </source>

@@ -258,7 +258,7 @@ module Fluent::Plugin
         raise CloudwatchIngestInput::State::LockFailed if lockstatus == false
 
         @store.merge!(Psych.safe_load(statefile.read))
-        @log.info("Loaded #{@store.keys.size} loggroups from #{statefile.path}")
+        @log.info("Loaded #{@store.keys.size} gnroups from #{statefile.path}")
       end
 
       def save
