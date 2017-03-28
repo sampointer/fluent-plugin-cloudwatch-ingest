@@ -264,7 +264,7 @@ module Fluent::Plugin
       def save
         statefile.rewind
         statefile.write(Psych.dump(@store))
-        @log.info("Saved state to #{statefile}")
+        @log.info("Saved state to #{statefile.path}")
         statefile.rewind
       end
 
