@@ -44,7 +44,10 @@ Or install it yourself as:
   <parse>
     @type cloudwatch_ingest
     expression /^(?<message>.+)$/
-    event_time true  # Take time from the Cloudwatch event, rather than parse it from the body
+    time_format %Y-%m-%d %H:%M:%S.%L
+    event_time true         # take time from the Cloudwatch event, rather than parse it from the body
+    inject_group_name true  # inject the group name into the record
+    inject_stream_name true # inject the stream name into the record
   </parse>
 </source>
 ```

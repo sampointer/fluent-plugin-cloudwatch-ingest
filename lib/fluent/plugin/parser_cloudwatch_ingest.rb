@@ -6,9 +6,11 @@ module Fluent
     class CloudwatchIngestParser < RegexpParser
       Plugin.register_parser('cloudwatch_ingest', self)
 
-      config_set_default :expression, '^(?<message>.+)$'
-      config_set_default :time_format, '%Y-%m-%d %H:%M:%S.%L'
-      config_set_default :event_time, true
+      config_param :expression, :string, default: '^(?<message>.+)$'
+      config_param :time_format, :string, default: '%Y-%m-%d %H:%M:%S.%L'
+      config_param :event_time, :bool, default: true
+      config_param :inject_group_name, :bool, default: true
+      config_param :inject_stream_name, :bool, default: true
 
       def initiaize
         super
@@ -18,13 +20,17 @@ module Fluent
         super
       end
 
-      def parse(event)
+      def parse(event, group, stream)
         time = nil
         record = nil
         super(event.message) do |t, r|
           time = t
           record = r
         end
+
+        # Inject optional fields
+        record['log_group_name'] = group if @inject_group_name
+        record['log_stream_name'] = stream if @inject_stream_name
 
         # We do String processing on the event time here to
         # avoid rounding errors introduced by floating point

@@ -34,9 +34,16 @@ module Fluent::Plugin
     config_param :aws_logging_enabled, :bool, default: false
     config_section :parse do
       config_set_default :@type, 'cloudwatch_ingest'
-      config_set_default :expression, '^(?<message>.+)$'
-      config_set_default :event_time, true
-      config_set_default :time_format, '%Y-%m-%d %H:%M:%S.%L'
+      desc 'Regular expression with which to parse the event message'
+      config_param :expression, :string, default: '^(?<message>.+)$'
+      desc 'Take the timestamp from the event rather than the expression'
+      config_param :event_time, :bool, default: true
+      desc 'Time format to use when parsing event message'
+      config_param :time_format, :string, default: '%Y-%m-%d %H:%M:%S.%L'
+      desc 'Inject the log group name into the record'
+      config_param :inject_group_name, :bool, default: true
+      desc 'Inject the log stream name into the record'
+      config_param :inject_stream_name, :bool, default: true
     end
 
     def initialize
@@ -94,8 +101,8 @@ module Fluent::Plugin
 
     private
 
-    def emit(event)
-      @parser.parse(event) do |time, record|
+    def emit(event, log_group_name, log_stream_name)
+      @parser.parse(event, log_group_name, log_stream_name) do |time, record|
         router.emit(@tag, time, record)
       end
     end
@@ -200,7 +207,7 @@ module Fluent::Plugin
 
               response.events.each do |e|
                 begin
-                  emit(e)
+                  emit(e, group, stream)
                 rescue => boom
                   log.error("Failed to emit event #{e}: #{boom}")
                 end
