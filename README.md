@@ -78,6 +78,45 @@ At present there is a bug within this plugin that, via an unwise cast, causes re
 
 Failing that I maintain my own fork of that repository with the fix in place: https://github.com/sampointer/fluent-plugin-elasticsearch/tree/add_configurable_time_precision_when_timestamp_missing
 
+### IAM
+IAM is a tricky and often bespoke subject. Here's a starter that will ingest all of the logs for all of your Lambdas in the account in which the plugin is running:
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "logs:DescribeLogGroups",
+                "logs:DescribeLogStreams",
+                "logs:DescribeMetricFilters",
+                "logs:FilterLogEvents",
+                "logs:GetLogEvents"
+            ],
+            "Resource": [
+                "arn:aws:logs:eu-west-1:123456789012:log-group:/aws/lambda/*:*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "logs:DescribeLogGroups",
+            ],
+            "Resource": [
+                "arn:aws:logs:eu-west-1:123456789012:log-group:*:*"
+            ]
+        }
+    ]
+}
+```
+
+### Cross-account authentication
+Is a tricky subject that probably cannot be described here. Broadly speaking the IAM instance role of the host on which the plugin is running
+needs to be able to `sts:AssumeRole` the `sts_arn` (and obviously needs `sts_enabled` to be true).
+
+The assumed role should look more-or-less like that above in terms of the actions and resource combinations required.
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
