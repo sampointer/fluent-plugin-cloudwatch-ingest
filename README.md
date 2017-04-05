@@ -1,7 +1,5 @@
 # Fluentd Cloudwatch Plugin [![Circle CI](https://circleci.com/gh/sampointer/fluent-plugin-cloudwatch-ingest.svg?style=shield)](https://circleci.com/gh/sampointer/fluent-plugin-cloudwatch-ingest) [![Gem Version](https://badge.fury.io/rb/fluent-plugin-cloudwatch-ingest.svg)](https://badge.fury.io/rb/fluent-plugin-cloudwatch-ingest) ![](http://ruby-gem-downloads-badge.herokuapp.com/fluent-plugin-cloudwatch-ingest?type=total)
 
-**This gem is not yet ready for production release or use.**
-
 ## Introduction
 
 This gem was created out of frustration with existing solutions for Cloudwatch log ingestion into a Fluentd pipeline. Specifically, it has been designed to support:
