@@ -66,6 +66,18 @@ When the state file is located on a shared filesystem an exclusive write lock wi
 As such it is safe to run multiple instances of this plugin consuming from the same CloudWatch logging source without fear of duplication, as long as they share a state file.
 In a properly configured auto-scaling group this provides for uninterrupted log ingestion in the event of a failure of any single node.
 
+### Sub-second timestamps
+When using `event_time true` the `@timestamp` field for the record is taken from the time recorded against the event by Cloudwatch. This is the most common mode to run in as it's an easy path to normalization: all of your Lambdas need not have the same, valid, `time_format` nor a regex that makes every case.
+
+If your output plugin supports sub-second precision (and you're running fluentd 0.14.x) you'll "enjoy" sub-second precision.
+
+#### Elasticsearch
+It is a common pattern to use fluentd alongside the [fluentd-plugin-elasticsearch](https://github.com/uken/fluent-plugin-elasticsearch) plugin, either directly or via [fluent-plugin-aws-elasticsearch-service](https://github.com/atomita/fluent-plugin-aws-elasticsearch-service), to ingest logs into Elasticsearch.
+
+At present there is a bug within this plugin that, via an unwise cast, causes records without a named timestamp field to be cast to `DateTime`, losing the precision. This PR: https://github.com/uken/fluent-plugin-elasticsearch/pull/249 fixes that issue. If you need this functionality then I would urge you to comment and express interest over there.
+
+Failing that I maintain my own fork of that repository with the fix in place: https://github.com/sampointer/fluent-plugin-elasticsearch/tree/add_configurable_time_precision_when_timestamp_missing
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
