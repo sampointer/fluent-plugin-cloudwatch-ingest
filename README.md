@@ -37,8 +37,8 @@ Or install it yourself as:
   log_group_name_prefix /aws/lambda
   log_stream_name_prefix 2017
   state_file_name /mnt/nfs/cloudwatch.state
-  interval 120
-  api_interval 300  # Time to wait between API call failures before retry
+  interval 60
+  api_interval 5  # Time to wait between API call failures before retry
   <parse>
     @type cloudwatch_ingest
     expression /^(?<message>.+)$/
