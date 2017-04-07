@@ -9,8 +9,8 @@ Gem::Specification.new do |spec|
   spec.authors       = ['Sam Pointer']
   spec.email         = ['san@outsidethe.net']
 
-  spec.summary       = 'Fluentd plugin to ingest cloudwatch logs'
-  spec.description   = 'Alternative to ryotarai/fluent-plugin-cloudwatch-logs'
+  spec.summary       = 'Fluentd plugin to ingest AWS Cloudwatch logs'
+  spec.description   = 'Fluentd plugin to ingest AWS Cloudwatch logs'
   spec.homepage      = 'https://github.com/sampointer/fluent-plugin-cloudwatch-ingest'
 
   # Prevent pushing this gem to RubyGems.org by setting 'allowed_push_host', or
