@@ -31,7 +31,12 @@ module Fluent::Plugin
     config_param :api_interval, :time, default: 5
     desc 'Tag to apply to record'
     config_param :tag, :string, default: 'cloudwatch'
+    desc 'Enabled AWS SDK logging'
     config_param :aws_logging_enabled, :bool, default: false
+    desc 'Limit the number of events fetched in any iteration'
+    config_param :limit_events, :integer, default: 10_000
+    desc 'Do not fetch events before this time'
+    config_param :event_start_time, :integer, default: 0
     config_section :parse do
       config_set_default :@type, 'cloudwatch_ingest'
       desc 'Regular expression with which to parse the event message'
@@ -202,7 +207,9 @@ module Fluent::Plugin
               response = @aws.get_log_events(
                 log_group_name: group,
                 log_stream_name: stream,
-                next_token: stream_token
+                next_token: stream_token,
+                limit: @limit_events,
+                start_time: @event_start_time
               )
 
               response.events.each do |e|
