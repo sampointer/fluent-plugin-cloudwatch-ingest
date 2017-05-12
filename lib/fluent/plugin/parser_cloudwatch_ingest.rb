@@ -12,7 +12,7 @@ module Fluent
       config_param :inject_group_name, :bool, default: true
       config_param :inject_stream_name, :bool, default: true
 
-      def initiaize
+      def initialize
         super
       end
 
