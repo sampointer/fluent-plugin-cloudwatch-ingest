@@ -209,7 +209,8 @@ module Fluent::Plugin
                 log_stream_name: stream,
                 next_token: stream_token,
                 limit: @limit_events,
-                start_time: @event_start_time
+                start_time: @event_start_time,
+                start_from_head: true
               )
 
               response.events.each do |e|
