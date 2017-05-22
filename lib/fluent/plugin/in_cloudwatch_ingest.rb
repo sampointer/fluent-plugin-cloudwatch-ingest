@@ -37,6 +37,8 @@ module Fluent::Plugin
     config_param :limit_events, :integer, default: 10_000
     desc 'Do not fetch events before this time'
     config_param :event_start_time, :integer, default: 0
+    desc 'Fetch the oldest logs first'
+    config_param :oldest_logs_first, :bool, default: false
     config_section :parse do
       config_set_default :@type, 'cloudwatch_ingest'
       desc 'Regular expression with which to parse the event message'
@@ -210,7 +212,7 @@ module Fluent::Plugin
                 next_token: stream_token,
                 limit: @limit_events,
                 start_time: @event_start_time,
-                start_from_head: true
+                start_from_head: @oldest_logs_first
               )
 
               response.events.each do |e|

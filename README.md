@@ -39,9 +39,10 @@ Or install it yourself as:
   limit_events 10000
   state_file_name /mnt/nfs/cloudwatch.state
   interval 60
-  api_interval 5      # Time to wait between API call failures before retry
-  limit_events 10000  # Number of events to fetch in any given iteration
-  event_start_time 0  # Do not fetch events before this time (UNIX epoch, miliseconds)
+  api_interval 5          # Time to wait between API call failures before retry
+  limit_events 10000      # Number of events to fetch in any given iteration
+  event_start_time 0      # Do not fetch events before this time (UNIX epoch, miliseconds)
+  oldest_logs_first false # When true fetch the oldest logs first
   <parse>
     @type cloudwatch_ingest
     expression /^(?<message>.+)$/
