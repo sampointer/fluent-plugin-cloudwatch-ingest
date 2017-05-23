@@ -8,7 +8,7 @@ require 'psych'
 
 module Fluent::Plugin
   class CloudwatchIngestInput < Fluent::Plugin::Input
-    Fluent::Plugin.register_input('cloudwatch_ingest', self)
+    Fluent::Plugin.register_input('cloudwatch_ingest_chaeyk', self)
     helpers :compat_parameters, :parser
 
     desc 'The region of the source cloudwatch logs'
@@ -37,8 +37,10 @@ module Fluent::Plugin
     config_param :limit_events, :integer, default: 10_000
     desc 'Do not fetch events before this time'
     config_param :event_start_time, :integer, default: 0
+    desc 'Fetch the oldest logs first'
+    config_param :oldest_logs_first, :bool, default: false
     config_section :parse do
-      config_set_default :@type, 'cloudwatch_ingest'
+      config_set_default :@type, 'cloudwatch_ingest_chaeyk'
       desc 'Regular expression with which to parse the event message'
       config_param :expression, :string, default: '^(?<message>.+)$'
       desc 'Take the timestamp from the event rather than the expression'
@@ -195,6 +197,10 @@ module Fluent::Plugin
         log_groups(@log_group_name_prefix).each do |group|
           # For each log stream get and emit the events
           log_streams(group, @log_stream_name_prefix).each do |stream|
+            if ! state.store[group][stream]
+              state.store[group][stream] = {}
+            end
+
             # See if we have some stored state for this group and stream.
             # If we have then use the stored forward_token to pick up
             # from that point. Otherwise start from the start.
@@ -217,7 +223,7 @@ module Fluent::Plugin
                 next_token: stream_token,
                 limit: @limit_events,
                 start_time: @event_start_time,
-                start_from_head: true
+                start_from_head: @oldest_logs_first
               )
 
               response.events.each do |e|
@@ -287,6 +293,7 @@ module Fluent::Plugin
           sleep_interval = @api_interval # when there is no events, slow down
         end
 
+        log.info("#{event_count} events processed.")
         log.info("Pausing for #{sleep_interval}")
         sleep sleep_interval
       end
