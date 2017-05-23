@@ -8,7 +8,7 @@ require 'psych'
 
 module Fluent::Plugin
   class CloudwatchIngestInput < Fluent::Plugin::Input
-    Fluent::Plugin.register_input('cloudwatch_ingest_chaeyk', self)
+    Fluent::Plugin.register_input('cloudwatch_ingest', self)
     helpers :compat_parameters, :parser
 
     desc 'The region of the source cloudwatch logs'
@@ -40,7 +40,7 @@ module Fluent::Plugin
     desc 'Fetch the oldest logs first'
     config_param :oldest_logs_first, :bool, default: false
     config_section :parse do
-      config_set_default :@type, 'cloudwatch_ingest_chaeyk'
+      config_set_default :@type, 'cloudwatch_ingest'
       desc 'Regular expression with which to parse the event message'
       config_param :expression, :string, default: '^(?<message>.+)$'
       desc 'Take the timestamp from the event rather than the expression'
