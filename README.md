@@ -50,6 +50,8 @@ Or install it yourself as:
     event_time true         # take time from the Cloudwatch event, rather than parse it from the body
     inject_group_name true  # inject the group name into the record
     inject_stream_name true # inject the stream name into the record
+    parse_json_body false   # Attempt to parse the body as json and add structured fields from the result
+    fail_on_unparsable_json # If the body cannot be parsed as json do not ingest the record
   </parse>
 </source>
 ```
@@ -70,6 +72,11 @@ When the state file is located on a shared filesystem an exclusive write lock wi
 As such it is safe to run multiple instances of this plugin consuming from the same CloudWatch logging source without fear of duplication, as long as they share a state file.
 In a properly configured auto-scaling group this provides for uninterrupted log ingestion in the event of a failure of any single node.
 
+### JSON parsing
+With the `parse_json_body` option set to `true` the plugin will attempt to parse the body of the log entry as JSON. If this is successful any field/value pairs found will be added to the emitted record as structured fields.
+
+If `fail_on_unparsable_json` is set to `true` a record body consisting of malformed json will cause the record to be rejected. You may wish to leave this setting as false if the plugin is ingesting multiple log groups with a mixture of json/structured and unstructured content.
+
 ### Sub-second timestamps
 When using `event_time true` the `@timestamp` field for the record is taken from the time recorded against the event by Cloudwatch. This is the most common mode to run in as it's an easy path to normalization: all of your Lambdas or other AWS service need not have the same, valid, `time_format` nor a regex that matches every case.
 
@@ -78,9 +85,7 @@ If your output plugin supports sub-second precision (and you're running fluentd 
 #### Elasticsearch
 It is a common pattern to use fluentd alongside the [fluentd-plugin-elasticsearch](https://github.com/uken/fluent-plugin-elasticsearch) plugin, either directly or via [fluent-plugin-aws-elasticsearch-service](https://github.com/atomita/fluent-plugin-aws-elasticsearch-service), to ingest logs into Elasticsearch.
 
-At present there is a bug within this plugin that, via an unwise cast, causes records without a named timestamp field to be cast to `DateTime`, losing the precision. This PR: https://github.com/uken/fluent-plugin-elasticsearch/pull/249 fixes that issue. If you need this functionality then I would urge you to comment and express interest over there.
-
-Failing that I maintain my own fork of that repository with the fix in place: https://github.com/sampointer/fluent-plugin-elasticsearch/tree/add_configurable_time_precision_when_timestamp_missing
+Prior to version 1.9.5 there was a bug within that plugin which, via an unwise cast, caused records without a named timestamp field to be cast to `DateTime`, losing the precision. This PR: https://github.com/uken/fluent-plugin-elasticsearch/pull/249 fixed that issue.
 
 ### IAM
 IAM is a tricky and often bespoke subject. Here's a starter that will ingest all of the logs for all of your Lambdas in the account in which the plugin is running:
