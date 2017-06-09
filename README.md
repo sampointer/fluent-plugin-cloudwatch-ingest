@@ -77,6 +77,8 @@ With the `parse_json_body` option set to `true` the plugin will attempt to parse
 
 If `fail_on_unparsable_json` is set to `true` a record body consisting of malformed json will cause the record to be rejected. You may wish to leave this setting as false if the plugin is ingesting multiple log groups with a mixture of json/structured and unstructured content.
 
+The `expression` is applied before JSON parsing is attempted. One may therefore extract a JSON fragment from within the event body if it is decorated with additional free-form text.
+
 ### Sub-second timestamps
 When using `event_time true` the `@timestamp` field for the record is taken from the time recorded against the event by Cloudwatch. This is the most common mode to run in as it's an easy path to normalization: all of your Lambdas or other AWS service need not have the same, valid, `time_format` nor a regex that matches every case.
 
