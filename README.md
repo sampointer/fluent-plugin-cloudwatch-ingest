@@ -123,8 +123,7 @@ IAM is a tricky and often bespoke subject. Here's a starter that will ingest all
 ```
 
 ### Cross-account authentication
-Is a tricky subject that probably cannot be described here. Broadly speaking the IAM instance role of the host on which the plugin is running
-needs to be able to `sts:AssumeRole` the `sts_arn` (and obviously needs `sts_enabled` to be true).
+Broadly speaking the IAM instance role of the host on which the plugin is running needs to be able to `sts:AssumeRole` the `sts_arn` (and obviously needs `sts_enabled` to be true).
 
 The assumed role should look more-or-less like that above in terms of the actions and resource combinations required.
 
