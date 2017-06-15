@@ -1,5 +1,6 @@
 require 'fluent/plugin/parser_regexp'
 require 'fluent/time'
+require 'multi_json'
 
 module Fluent
   module Plugin
@@ -11,6 +12,8 @@ module Fluent
       config_param :event_time, :bool, default: true
       config_param :inject_group_name, :bool, default: true
       config_param :inject_stream_name, :bool, default: true
+      config_param :parse_json_body, :bool, default: false
+      config_param :fail_on_unparsable_json, :bool, default: false
 
       def initialize
         super
@@ -26,6 +29,18 @@ module Fluent
         super(event.message) do |t, r|
           time = t
           record = r
+        end
+
+        # Optionally attempt to parse the body as json
+        if @parse_json_body
+          begin
+            record.merge!(MultiJson.load(record))
+          rescue MultiJson::ParseError
+            if @fail_on_unparsable_json
+              yield nil, nil
+              return
+            end
+          end
         end
 
         # Inject optional fields
