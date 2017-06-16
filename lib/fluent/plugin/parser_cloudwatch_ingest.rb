@@ -35,7 +35,7 @@ module Fluent
         if @parse_json_body
           begin
             json_body = MultiJson.load(record)
-            json_body.each_pair do |k,v|
+            json_body.each_pair do |k, v|
               record[k.to_s] = v.to_s
             end
           rescue MultiJson::ParseError
