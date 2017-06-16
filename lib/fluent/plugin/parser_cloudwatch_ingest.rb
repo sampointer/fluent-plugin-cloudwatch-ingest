@@ -37,7 +37,7 @@ module Fluent
             # Whilst we could just merge! the parsed
             # message into the record we'd bork on
             # nested keys. Force level one Strings.
-            json_body = MultiJson.load(record.message)
+            json_body = MultiJson.load(record['message'])
             json_body.each_pair do |k, v|
               record[k.to_s] = v.to_s
             end
