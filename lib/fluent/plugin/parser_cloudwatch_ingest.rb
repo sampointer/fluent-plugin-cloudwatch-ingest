@@ -34,7 +34,10 @@ module Fluent
         # Optionally attempt to parse the body as json
         if @parse_json_body
           begin
-            record.merge!(MultiJson.load(record))
+            json_body = MultiJson.load(record)
+            json_body.each_pair do |k,v|
+              record[k.to_s] = v.to_s
+            end
           rescue MultiJson::ParseError
             if @fail_on_unparsable_json
               yield nil, nil
