@@ -228,9 +228,9 @@ module Fluent::Plugin
         begin
           state = State.new(@state_file_name, log)
         rescue => boom
-          log.info("Failed lock state. Sleeping for #{@interval}: "\
+          log.info("Failed lock state. Sleeping for #{@api_interval}: "\
                    "#{boom.inspect}")
-          sleep @interval
+          sleep @api_interval
           next
         end
 
@@ -282,7 +282,7 @@ module Fluent::Plugin
         begin
           state.save
           state.close
-        rescue
+        rescue => boom
           log.error("Unable to save state file: #{boom.inspect}")
         end
 
