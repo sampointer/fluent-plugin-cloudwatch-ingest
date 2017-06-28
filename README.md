@@ -1,4 +1,5 @@
-# Fluentd Cloudwatch Plugin [![Circle CI](https://circleci.com/gh/sampointer/fluent-plugin-cloudwatch-ingest.svg?style=shield)](https://circleci.com/gh/sampointer/fluent-plugin-cloudwatch-ingest) [![Gem Version](https://badge.fury.io/rb/fluent-plugin-cloudwatch-ingest.svg)](https://badge.fury.io/rb/fluent-plugin-cloudwatch-ingest) ![](http://ruby-gem-downloads-badge.herokuapp.com/fluent-plugin-cloudwatch-ingest?type=total) [![Join the chat at /gitter.im/python-diamond/Diamond](https://badges.gitter.im/fluent-plugin-cloudwatch-ingest.svg)](https://gitter.im/fluent-plugin-cloudwatch-ingest/Lobby?utm_source=share-link&utm_medium=link&utm_campaign=share-link)
+# Fluentd Cloudwatch Plugin
+[![Circle CI](https://circleci.com/gh/sampointer/fluent-plugin-cloudwatch-ingest.svg?style=shield)](https://circleci.com/gh/sampointer/fluent-plugin-cloudwatch-ingest) [![Gem Version](https://badge.fury.io/rb/fluent-plugin-cloudwatch-ingest.svg)](https://badge.fury.io/rb/fluent-plugin-cloudwatch-ingest) ![](http://ruby-gem-downloads-badge.herokuapp.com/fluent-plugin-cloudwatch-ingest?type=total) [![Join the chat at /gitter.im/python-diamond/Diamond](https://badges.gitter.im/fluent-plugin-cloudwatch-ingest.svg)](https://gitter.im/fluent-plugin-cloudwatch-ingest/Lobby?utm_source=share-link&utm_medium=link&utm_campaign=share-link)
 
 ## Introduction
 
