@@ -80,6 +80,22 @@ If `fail_on_unparsable_json` is set to `true` a record body consisting of malfor
 
 The `expression` is applied before JSON parsing is attempted. One may therefore extract a JSON fragment from within the event body if it is decorated with additional free-form text.
 
+### Telemetry
+With `telemetry` set to `true` and a valid `statsd_endpoint` the plugin will emit telemetry in statsd format to 8125:UDP. It is up to you to configure your statsd-speaking daemon to add any prefix or tagging that you might want.
+
+The metrics emitted in this version are:
+
+```
+api.calls.describeloggroups.attempted
+api.calls.describeloggroups.failed
+api.calls.describelogstreams.attempted
+api.calls.describelogstreams.failed
+api.calls.getlogevents.attempted
+api.calls.getlogevents.failed
+api.calls.getlogevents.invalid_token
+events.emitted.success
+```
+
 ### Sub-second timestamps
 When using `event_time true` the `@timestamp` field for the record is taken from the time recorded against the event by Cloudwatch. This is the most common mode to run in as it's an easy path to normalization: all of your Lambdas or other AWS service need not have the same, valid, `time_format` nor a regex that matches every case.
 
