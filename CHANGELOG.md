@@ -2,7 +2,7 @@
 
 ## 0.1.3
 
-Initial release
+* Initial release
 
 ## 0.2.1
 
