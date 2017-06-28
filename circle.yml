@@ -9,3 +9,6 @@ deployment:
     owner: sampointer
     commands:
       - bin/deploy
+notify:
+  webhooks:
+    - url: https://webhooks.gitter.im/e/e1ae263bbcea2f51419f
