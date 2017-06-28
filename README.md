@@ -38,10 +38,12 @@ Or install it yourself as:
   log_stream_name_prefix 2017
   state_file_name /mnt/nfs/cloudwatch.state
   interval 60
-  api_interval 5          # Time to wait between API call failures before retry
-  limit_events 10000      # Number of events to fetch in any given iteration
-  event_start_time 0      # Do not fetch events before this time (UNIX epoch, miliseconds)
-  oldest_logs_first false # When true fetch the oldest logs first
+  api_interval 5            # Time to wait between API call failures before retry
+  limit_events 10000        # Number of events to fetch in any given iteration
+  event_start_time 0        # Do not fetch events before this time (UNIX epoch, miliseconds)
+  oldest_logs_first false   # When true fetch the oldest logs first
+  telemetry false           # Produce statsd telemetry
+  statsd_endpoint localhost # Endpoint to which telemetry should be sent
   <parse>
     @type cloudwatch_ingest
     expression /^(?<message>.+)$/

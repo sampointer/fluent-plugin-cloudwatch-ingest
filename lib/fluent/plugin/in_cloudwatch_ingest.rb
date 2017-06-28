@@ -24,7 +24,7 @@ module Fluent::Plugin
     desc 'Log stream name or prefix. Not setting means "all"'
     config_param :log_stream_name_prefix, :string, default: ''
     desc 'State file name'
-    config_param :state_file_name, :string, default: '/var/spool/td-agent/cloudwatch.state' # rubocop:disable all
+    config_param :state_file_name, :string, default: '/var/spool/td-agent/cloudwatch.state' # rubocop:disable LineLength
     desc 'Fetch logs every interval'
     config_param :interval, :time, default: 60
     desc 'Time to pause between API call failures and limits'
@@ -39,6 +39,10 @@ module Fluent::Plugin
     config_param :event_start_time, :integer, default: 0
     desc 'Fetch the oldest logs first'
     config_param :oldest_logs_first, :bool, default: false
+    desc 'Turn on telemetry'
+    config_param :telemetry, :bool, default: false
+    desc 'Statsd endpoint to which telemetry should be written'
+    config_param :statsd_endpoint, :string, default: 'localhost'
     config_section :parse do
       config_set_default :@type, 'cloudwatch_ingest'
       desc 'Regular expression with which to parse the event message'
@@ -58,6 +62,15 @@ module Fluent::Plugin
       log.info('Starting fluentd-plugin-cloudwatch-ingest')
     end
 
+    def metric(method, name, value = 0)
+      case method
+      when :increment
+        @statsd.send(method, name) if @telemetry
+      else
+        @statsd.send(method, name, value) if @telemetry
+      end
+    end
+
     def configure(conf)
       super
       compat_parameters_convert(conf, :parser)
@@ -71,6 +84,9 @@ module Fluent::Plugin
       unless parser_config['event_time']
         raise Fluent::ConfigError, 'parse/event_time is required.'
       end
+
+      # Configure telemetry, if enabled
+      @statsd = Statsd.new @statsd_endpoint, 8125 if @telemetry
 
       @parser = parser_create(conf: parser_config)
       log.info('Configured fluentd-plugin-cloudwatch-ingest')
@@ -92,7 +108,7 @@ module Fluent::Plugin
           role_session_name: @sts_session_name
         )
 
-        log.info("Using STS for authentication with source account ARN: #{@sts_arn}, session name: #{@sts_session_name}") # rubocop:disable all
+        log.info("Using STS for authentication with source account ARN: #{@sts_arn}, session name: #{@sts_session_name}") # rubocop:disable LineLength
       else
         log.info('Using local instance IAM role for authentication')
       end
@@ -111,6 +127,7 @@ module Fluent::Plugin
     def emit(event, log_group_name, log_stream_name)
       @parser.parse(event, log_group_name, log_stream_name) do |time, record|
         router.emit(@tag, time, record)
+        metric(:increment, 'events.emitted.success')
       end
     end
 
@@ -121,6 +138,7 @@ module Fluent::Plugin
       next_token = nil
       loop do
         begin
+          metric(:increment, 'api.calls.describeloggroups.attempted')
           response = if !log_group_prefix.empty?
                        @aws.describe_log_groups(
                          log_group_name_prefix: log_group_prefix,
@@ -137,6 +155,7 @@ module Fluent::Plugin
           next_token = response.next_token
         rescue => boom
           log.error("Unable to retrieve log groups: #{boom.inspect}")
+          metric(:increment, 'api.calls.describeloggroups.failed')
           next_token = nil
           sleep @api_interval
           retry
@@ -152,6 +171,7 @@ module Fluent::Plugin
       next_token = nil
       loop do
         begin
+          metric(:increment, 'api.calls.describelogstreams.attempted')
           response = if !log_stream_name_prefix.empty?
                        @aws.describe_log_streams(
                          log_group_name: log_group_name,
@@ -169,7 +189,8 @@ module Fluent::Plugin
           break unless response.next_token
           next_token = response.next_token
         rescue => boom
-          log.error("Unable to retrieve log streams for group #{log_group_name} with stream prefix #{log_stream_name_prefix}: #{boom.inspect}") # rubocop:disable all
+          log.error("Unable to retrieve log streams for group #{log_group_name} with stream prefix #{log_stream_name_prefix}: #{boom.inspect}") # rubocop:disable LineLength
+          metric(:increment, 'api.calls.describelogstreams.failed')
           log_streams = []
           next_token = nil
           sleep @api_interval
@@ -184,6 +205,7 @@ module Fluent::Plugin
     def process_stream(group, stream, next_token, start_time, state)
       event_count = 0
 
+      metric(:increment, 'api.calls.getlogevents.attempted')
       response = @aws.get_log_events(
         log_group_name: group,
         log_stream_name: stream,
@@ -253,6 +275,7 @@ module Fluent::Plugin
                                             state.store[group][stream]['token'],
                                             @event_start_time, state)
             rescue Aws::CloudWatchLogs::Errors::InvalidParameterException
+              metric(:increment, 'api.calls.getlogevents.invalid_token')
               log.error('cloudwatch token is expired or broken. '\
                         'trying with timestamp.')
 
@@ -266,12 +289,13 @@ module Fluent::Plugin
               rescue => boom
                 log.error("Unable to retrieve events for stream #{stream} "\
                           "in group #{group}: #{boom.inspect}") # rubocop:disable all
+                metric(:increment, 'api.calls.getlogevents.failed')
                 sleep @api_interval
                 next
               end
             rescue => boom
-              log.error("Unable to retrieve events for stream #{stream} "\
-                        "in group #{group}: #{boom.inspect}") # rubocop:disable all
+              log.error("Unable to retrieve events for stream #{stream} in group #{group}: #{boom.inspect}") # rubocop:disable LineLength
+              metric(:increment, 'api.calls.getlogevents.failed')
               sleep @api_interval
               next
             end
