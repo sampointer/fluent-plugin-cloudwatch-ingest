@@ -92,7 +92,7 @@ module Fluent::Plugin
       # Fixup deprecated options
       if @api_interval
         @error_interval = @api_interval
-        log.warn("api_interval is deprecated for error_interval")
+        log.warn('api_interval is deprecated for error_interval')
       end
 
       @parser = parser_create(conf: parser_config)
