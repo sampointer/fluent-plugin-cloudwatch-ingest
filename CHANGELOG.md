@@ -34,4 +34,5 @@
 * Amend how `api_interval` is used (see README.md) (@chaeyk)
 * Improve null stream detection (@chaeyk)
 * Remove streams from state file that are no longer present (@chaeyk)
-* Apply `api_interval` when failing to get statefile lock (@chaeyk)
+* Apply `error_interval` when failing to get statefile lock (@chaeyk)
+* `api_interval` deprecated in favour of `error_interval`

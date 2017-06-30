@@ -27,8 +27,9 @@ module Fluent::Plugin
     config_param :state_file_name, :string, default: '/var/spool/td-agent/cloudwatch.state' # rubocop:disable LineLength
     desc 'Fetch logs every interval'
     config_param :interval, :time, default: 60
-    desc 'Time to pause between API call failures and limits'
-    config_param :api_interval, :time, default: 5
+    desc 'Time to pause between error conditions'
+    config_param :error_interval, :time, default: 5
+    config_param :api_interval, :time
     desc 'Tag to apply to record'
     config_param :tag, :string, default: 'cloudwatch'
     desc 'Enabled AWS SDK logging'
@@ -87,6 +88,12 @@ module Fluent::Plugin
 
       # Configure telemetry, if enabled
       @statsd = Statsd.new @statsd_endpoint, 8125 if @telemetry
+
+      # Fixup deprecated options
+      if @api_interval
+        @error_interval = @api_interval
+        log.warn("api_interval is deprecated for error_interval")
+      end
 
       @parser = parser_create(conf: parser_config)
       log.info('Configured fluentd-plugin-cloudwatch-ingest')
@@ -157,7 +164,7 @@ module Fluent::Plugin
           log.error("Unable to retrieve log groups: #{boom.inspect}")
           metric(:increment, 'api.calls.describeloggroups.failed')
           next_token = nil
-          sleep @api_interval
+          sleep @error_interval
           retry
         end
       end
@@ -193,7 +200,7 @@ module Fluent::Plugin
           metric(:increment, 'api.calls.describelogstreams.failed')
           log_streams = []
           next_token = nil
-          sleep @api_interval
+          sleep @error_interval
           retry
         end
       end
@@ -250,9 +257,9 @@ module Fluent::Plugin
         begin
           state = State.new(@state_file_name, log)
         rescue => boom
-          log.info("Failed lock state. Sleeping for #{@api_interval}: "\
+          log.info("Failed lock state. Sleeping for #{@error_interval}: "\
                    "#{boom.inspect}")
-          sleep @api_interval
+          sleep @error_interval
           next
         end
 
@@ -290,13 +297,13 @@ module Fluent::Plugin
                 log.error("Unable to retrieve events for stream #{stream} "\
                           "in group #{group}: #{boom.inspect}") # rubocop:disable all
                 metric(:increment, 'api.calls.getlogevents.failed')
-                sleep @api_interval
+                sleep @error_interval
                 next
               end
             rescue => boom
               log.error("Unable to retrieve events for stream #{stream} in group #{group}: #{boom.inspect}") # rubocop:disable LineLength
               metric(:increment, 'api.calls.getlogevents.failed')
-              sleep @api_interval
+              sleep @error_interval
               next
             end
           end
@@ -313,7 +320,7 @@ module Fluent::Plugin
         if event_count > 0
           sleep_interval = @interval
         else
-          sleep_interval = @api_interval # when there is no events, slow down
+          sleep_interval = @error_interval # when there is no events, slow down
         end
 
         log.info("#{event_count} events processed.")
