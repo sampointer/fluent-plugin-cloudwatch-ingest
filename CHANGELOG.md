@@ -36,3 +36,7 @@
 * Remove streams from state file that are no longer present (@chaeyk)
 * Apply `error_interval` when failing to get statefile lock (@chaeyk)
 * `api_interval` deprecated in favour of `error_interval`
+
+## 1.1.0
+
+* Update aws-sdk runtime dependency
