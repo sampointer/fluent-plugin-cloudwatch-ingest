@@ -56,6 +56,8 @@ Or install it yourself as:
     inject_plugin_ingestion_time false     # inject the 13 digit epoch time at which the plugin ingested the event
     parse_json_body false                  # Attempt to parse the body as json and add structured fields from the result
     fail_on_unparsable_json false          # If the body cannot be parsed as json do not ingest the record
+    telemetry false                        # Produce statsd telemetry
+    statsd_endpoint localhost              # Endpoint to which telemetry should be sent
   </parse>
 </source>
 ```
@@ -97,6 +99,16 @@ api.calls.getlogevents.attempted
 api.calls.getlogevents.failed
 api.calls.getlogevents.invalid_token
 events.emitted.success
+```
+
+Likewise when telemetry is enabled for the parser, the emitted metrics are:
+
+```
+parser.record.attempted
+parser.record.success
+parser.json.success     # if json parsing is enabledp
+parser.json.failed      # if json parsing is enabledp
+parser.ingestion_skew   # the difference between `timestamp` and `ingestion_time` as returned by the Cloudwatch API
 ```
 
 ### Sub-second timestamps

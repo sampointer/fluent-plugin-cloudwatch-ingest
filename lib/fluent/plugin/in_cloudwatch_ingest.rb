@@ -5,6 +5,7 @@ require 'fluent/plugin/parser'
 require 'json'
 require 'pathname'
 require 'psych'
+require 'statsd-ruby'
 
 module Fluent::Plugin
   class CloudwatchIngestInput < Fluent::Plugin::Input
