@@ -85,6 +85,11 @@ If `fail_on_unparsable_json` is set to `true` a record body consisting of malfor
 
 The `expression` is applied before JSON parsing is attempted. One may therefore extract a JSON fragment from within the event body if it is decorated with additional free-form text.
 
+### High volume Log Groups
+If you're having ingestion problems from high volume log groups you're advised to enable telemetry in both the main plugin and the parser, and to also set both `inject_cloudwatch_ingestion_time` and `inject_plugin_ingestion_time` to `true`.
+
+This will enable your telemetry system to plot the state of your rate limiting, the effect of the ingestion delay _inside_ Cloudwatch Logs (`timestamp` vs `ingestion_time`) and take appropriate tuning action.
+
 ### Telemetry
 With `telemetry` set to `true` and a valid `statsd_endpoint` the plugin will emit telemetry in statsd format to 8125:UDP. It is up to you to configure your statsd-speaking daemon to add any prefix or tagging that you might want.
 
@@ -106,8 +111,8 @@ Likewise when telemetry is enabled for the parser, the emitted metrics are:
 ```
 parser.record.attempted
 parser.record.success
-parser.json.success     # if json parsing is enabledp
-parser.json.failed      # if json parsing is enabledp
+parser.json.success     # if json parsing is enabled
+parser.json.failed      # if json parsing is enabled
 parser.ingestion_skew   # the difference between `timestamp` and `ingestion_time` as returned by the Cloudwatch API
 ```
 

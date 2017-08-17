@@ -40,7 +40,7 @@ module Fluent
       end
 
       def parse(event, group, stream)
-        metric(:increment, parser.record.attempted)
+        metric(:increment, 'parser.record.attempted')
 
         time = nil
         record = nil
@@ -56,12 +56,12 @@ module Fluent
             # message into the record we'd bork on
             # nested keys. Force level one Strings.
             json_body = MultiJson.load(record['message'])
-            metric(:increment, parser.json.success)
+            metric(:increment, 'parser.json.success')
             json_body.each_pair do |k, v|
               record[k.to_s] = v.to_s
             end
           rescue MultiJson::ParseError
-            metric(:increment, parser.json.failed)
+            metric(:increment, 'parser.json.failed')
             if @fail_on_unparsable_json
               yield nil, nil
               return
@@ -88,7 +88,7 @@ module Fluent
         if @telemetry
           metric(
             :gauge,
-            parser.ingestion_skew,
+            'parser.ingestion_skew',
             event.ingestion_time - event.timestamp
           )
         end
@@ -101,7 +101,7 @@ module Fluent
 
         time = Fluent::EventTime.new(event_s, event_ns) if @event_time
 
-        metric(:increment, parser.record.success)
+        metric(:increment, 'parser.record.success')
         yield time, record
       end
     end
