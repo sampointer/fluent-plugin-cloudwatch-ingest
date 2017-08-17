@@ -1,6 +1,7 @@
 require 'fluent/plugin/parser_regexp'
 require 'fluent/time'
 require 'multi_json'
+require 'date'
 
 module Fluent
   module Plugin
@@ -11,6 +12,8 @@ module Fluent
       config_param :time_format, :string, default: '%Y-%m-%d %H:%M:%S.%L'
       config_param :event_time, :bool, default: true
       config_param :inject_group_name, :bool, default: true
+      config_param :inject_cloudwatch_ingestion_time, :bool, default: false
+      config_param :inject_plugin_ingestion_time, :bool, default: false
       config_param :inject_stream_name, :bool, default: true
       config_param :parse_json_body, :bool, default: false
       config_param :fail_on_unparsable_json, :bool, default: false
@@ -52,6 +55,15 @@ module Fluent
         # Inject optional fields
         record['log_group_name'] = group if @inject_group_name
         record['log_stream_name'] = stream if @inject_stream_name
+        if @inject_plugin_ingestion_time
+          record['plugin_ingestion_time'] = DateTime.now.iso8601
+        end
+
+        if @inject_cloudwatch_ingestion_time
+          epoch_ms = event.ingestion_time.to_f / 1000
+          time = Time.at(epoch_ms)
+          record['cloudwatch_ingestion_time'] = time.to_datetime.iso8601(3)
+        end
 
         # We do String processing on the event time here to
         # avoid rounding errors introduced by floating point
