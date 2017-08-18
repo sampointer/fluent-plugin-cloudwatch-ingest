@@ -40,3 +40,10 @@
 ## 1.1.0
 
 * Update aws-sdk runtime dependency
+
+## 1.2.0
+
+* Add the ability to inject both the `ingestion_time returned from the the Cloudwatch Logs API, and the time that this plugin ingested the event into the record.
+* Add telemetry to the parser
+
+Both of these changes are designed to make debugging ingestion problems from high-volume log groups easier.

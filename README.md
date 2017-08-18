@@ -49,11 +49,15 @@ Or install it yourself as:
     @type cloudwatch_ingest
     expression /^(?<message>.+)$/
     time_format %Y-%m-%d %H:%M:%S.%L
-    event_time true               # take time from the Cloudwatch event, rather than parse it from the body
-    inject_group_name true        # inject the group name into the record
-    inject_stream_name true       # inject the stream name into the record
-    parse_json_body false         # Attempt to parse the body as json and add structured fields from the result
-    fail_on_unparsable_json false # If the body cannot be parsed as json do not ingest the record
+    event_time true                             # take time from the Cloudwatch event, rather than parse it from the body
+    inject_group_name true                      # inject the group name into the record
+    inject_stream_name true                     # inject the stream name into the record
+    inject_cloudwatch_ingestion_time field_name # inject the `ingestion_time` as returned by the Cloudwatch API
+    inject_plugin_ingestion_time field_name     # inject the 13 digit epoch time at which the plugin ingested the event
+    parse_json_body false                       # Attempt to parse the body as json and add structured fields from the result
+    fail_on_unparsable_json false               # If the body cannot be parsed as json do not ingest the record
+    telemetry false                             # Produce statsd telemetry
+    statsd_endpoint localhost              # Endpoint to which telemetry should be sent
   </parse>
 </source>
 ```
@@ -81,6 +85,11 @@ If `fail_on_unparsable_json` is set to `true` a record body consisting of malfor
 
 The `expression` is applied before JSON parsing is attempted. One may therefore extract a JSON fragment from within the event body if it is decorated with additional free-form text.
 
+### High volume Log Groups
+If you're having ingestion problems from high volume log groups you're advised to enable telemetry in both the main plugin and the parser, and to also set both `inject_cloudwatch_ingestion_time` and `inject_plugin_ingestion_time` to `true`.
+
+This will enable your telemetry system to plot the state of your rate limiting, the effect of the ingestion delay _inside_ Cloudwatch Logs (`timestamp` vs `ingestion_time`) and take appropriate tuning action.
+
 ### Telemetry
 With `telemetry` set to `true` and a valid `statsd_endpoint` the plugin will emit telemetry in statsd format to 8125:UDP. It is up to you to configure your statsd-speaking daemon to add any prefix or tagging that you might want.
 
@@ -95,6 +104,16 @@ api.calls.getlogevents.attempted
 api.calls.getlogevents.failed
 api.calls.getlogevents.invalid_token
 events.emitted.success
+```
+
+Likewise when telemetry is enabled for the parser, the emitted metrics are:
+
+```
+parser.record.attempted
+parser.record.success
+parser.json.success     # if json parsing is enabled
+parser.json.failed      # if json parsing is enabled
+parser.ingestion_skew   # the difference between `timestamp` and `ingestion_time` as returned by the Cloudwatch API
 ```
 
 ### Sub-second timestamps
