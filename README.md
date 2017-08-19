@@ -52,8 +52,8 @@ Or install it yourself as:
     event_time true                             # take time from the Cloudwatch event, rather than parse it from the body
     inject_group_name true                      # inject the group name into the record
     inject_stream_name true                     # inject the stream name into the record
-    inject_cloudwatch_ingestion_time field_name # inject the `ingestion_time` as returned by the Cloudwatch API
-    inject_plugin_ingestion_time field_name     # inject the 13 digit epoch time at which the plugin ingested the event
+    inject_cloudwatch_ingestion_time field_name # inject the iso8601 `ingestion_time` as returned by the Cloudwatch API
+    inject_plugin_ingestion_time field_name     # inject the iso8601 time at which the plugin ingested the event
     parse_json_body false                       # Attempt to parse the body as json and add structured fields from the result
     fail_on_unparsable_json false               # If the body cannot be parsed as json do not ingest the record
     telemetry false                             # Produce statsd telemetry
