@@ -37,6 +37,7 @@ Or install it yourself as:
   aws_logging_enabled true
   log_group_name_prefix /aws/lambda
   log_stream_name_prefix 2017
+  log_group_exclude_regexp [^A-Z]{1}.* # exclude log groups that start with a captial
   state_file_name /mnt/nfs/cloudwatch.state
   interval 60
   error_interval 5          # Time to wait between error conditions before retry
@@ -100,6 +101,7 @@ api.calls.describeloggroups.attempted
 api.calls.describeloggroups.failed
 api.calls.describelogstreams.attempted
 api.calls.describelogstreams.failed
+api.calls.describeloggroups.excluded # due to log_group_exclude_regexp
 api.calls.getlogevents.attempted
 api.calls.getlogevents.failed
 api.calls.getlogevents.invalid_token
