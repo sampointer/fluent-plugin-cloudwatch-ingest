@@ -24,6 +24,8 @@ module Fluent::Plugin
     config_param :log_group_name_prefix, :string, default: ''
     desc 'Log stream name or prefix. Not setting means "all"'
     config_param :log_stream_name_prefix, :string, default: ''
+    desc 'Log group regexp to exclude, despite matching'
+    config_param :log_group_exclude_regexp, :string, default: ''
     desc 'State file name'
     config_param :state_file_name, :string, default: '/var/spool/td-agent/cloudwatch.state' # rubocop:disable LineLength
     desc 'Fetch logs every interval'
@@ -158,7 +160,19 @@ module Fluent::Plugin
                        )
                      end
 
-          response.log_groups.each { |g| log_groups << g.log_group_name }
+          regex = Regexp.new(@log_group_exclude_regexp)
+          response.log_groups.each do |group|
+            if !@log_group_exclude_regexp.empty?
+              if regex.match(group.log_group_name)
+                log.info("Excluding log_group #{group.log_group_name} due to log_group_exclude_regexp #{@log_group_exclude_regexp}") # rubocop:disable LineLength
+                metric(:increment, 'api.calls.describeloggroups.excluded')
+              else
+                log_groups << group.log_group_name
+              end
+            else
+              log_groups << group.log_group_name
+            end
+          end
           break unless response.next_token
           next_token = response.next_token
         rescue => boom
