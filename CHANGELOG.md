@@ -47,3 +47,7 @@
 * Add telemetry to the parser
 
 Both of these changes are designed to make debugging ingestion problems from high-volume log groups easier.
+
+## 1.3.0
+
+* Add `log_group_exclude_regexp` to allow optional exclusion of log groups by regexp
