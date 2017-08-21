@@ -43,6 +43,8 @@ module Fluent::Plugin
     config_param :event_start_time, :integer, default: 0
     desc 'Fetch the oldest logs first'
     config_param :oldest_logs_first, :bool, default: false
+    desc 'Refuse to emit events with a blank "message" field'
+    config_param :drop_blank_events, :bool, default: true
     desc 'Turn on telemetry'
     config_param :telemetry, :bool, default: false
     desc 'Statsd endpoint to which telemetry should be written'
@@ -136,6 +138,11 @@ module Fluent::Plugin
 
     def emit(event, log_group_name, log_stream_name)
       @parser.parse(event, log_group_name, log_stream_name) do |time, record|
+        if record['message'].chomp.empty? && @drop_blank_events
+          log.warn("Event is blank or contains only a newline, refusing to emit. group: #{log_group_name}, stream: #{log_stream_name}, event: #{event}") # rubocop:disable LineLength
+          metric(:increment, 'events.emitted.blocked')
+          next
+        end
         router.emit(@tag, time, record)
         metric(:increment, 'events.emitted.success')
       end

@@ -44,6 +44,7 @@ Or install it yourself as:
   limit_events 10000        # Number of events to fetch in any given iteration
   event_start_time 0        # Do not fetch events before this time (UNIX epoch, miliseconds)
   oldest_logs_first false   # When true fetch the oldest logs first
+  drop_blank_events true    # Fluentd may throw an exception if a blank event is emitted
   telemetry false           # Produce statsd telemetry
   statsd_endpoint localhost # Endpoint to which telemetry should be sent
   <parse>
@@ -106,6 +107,7 @@ api.calls.getlogevents.attempted
 api.calls.getlogevents.failed
 api.calls.getlogevents.invalid_token
 events.emitted.success
+events.emitted.blocked
 ```
 
 Likewise when telemetry is enabled for the parser, the emitted metrics are:
@@ -116,6 +118,7 @@ parser.record.success
 parser.json.success     # if json parsing is enabled
 parser.json.failed      # if json parsing is enabled
 parser.ingestion_skew   # the difference between `timestamp` and `ingestion_time` as returned by the Cloudwatch API
+parser.plugin_skew      # the difference between "now" and `timestamp`
 ```
 
 ### Sub-second timestamps
