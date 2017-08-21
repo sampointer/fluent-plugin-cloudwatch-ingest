@@ -56,3 +56,4 @@ Both of these changes are designed to make debugging ingestion problems from hig
 
 * Refuse to emit records with a blank (or newline only) message
 * Emit metric `events.emitted.blocked` to expose these alongside logging
+* Add plugin skew time to telemetry optionally emitted from the parser

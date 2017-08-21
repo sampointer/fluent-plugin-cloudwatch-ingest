@@ -94,6 +94,15 @@ module Fluent
           )
         end
 
+        # Optionally emit @timestamp and plugin ingestion time skew
+        if @telemetry
+          metric(
+            :gauge,
+            'parser.plugin_skew',
+            now - event.timestamp
+          )
+        end
+
         # We do String processing on the event time here to
         # avoid rounding errors introduced by floating point
         # arithmetic.

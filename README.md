@@ -117,6 +117,7 @@ parser.record.success
 parser.json.success     # if json parsing is enabled
 parser.json.failed      # if json parsing is enabled
 parser.ingestion_skew   # the difference between `timestamp` and `ingestion_time` as returned by the Cloudwatch API
+parser.plugin_skew      # the difference between "now" and `timestamp`
 ```
 
 ### Sub-second timestamps
