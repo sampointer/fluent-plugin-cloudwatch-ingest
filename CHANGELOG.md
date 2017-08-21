@@ -51,3 +51,8 @@ Both of these changes are designed to make debugging ingestion problems from hig
 ## 1.3.0
 
 * Add `log_group_exclude_regexp` to allow optional exclusion of log groups by regexp
+
+## 1.4.0
+
+* Refuse to emit records with a blank (or newline only) message
+* Emit metric `events.emitted.blocked` to expose these alongside logging

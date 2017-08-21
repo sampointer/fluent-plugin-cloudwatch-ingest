@@ -106,6 +106,7 @@ api.calls.getlogevents.attempted
 api.calls.getlogevents.failed
 api.calls.getlogevents.invalid_token
 events.emitted.success
+events.emitted.blocked
 ```
 
 Likewise when telemetry is enabled for the parser, the emitted metrics are:

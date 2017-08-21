@@ -136,6 +136,11 @@ module Fluent::Plugin
 
     def emit(event, log_group_name, log_stream_name)
       @parser.parse(event, log_group_name, log_stream_name) do |time, record|
+        if record.chomp.empty?
+          log.warn("Event is blank or contains only a newline, refusing to emit. group: #{log_group_name}, stream: #{log_stream_name}, event: #{event}") # rubocop:disable LineLength
+          metric(:increment, 'events.emitted.blocked')
+          next
+        end
         router.emit(@tag, time, record)
         metric(:increment, 'events.emitted.success')
       end
