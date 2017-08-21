@@ -44,6 +44,7 @@ Or install it yourself as:
   limit_events 10000        # Number of events to fetch in any given iteration
   event_start_time 0        # Do not fetch events before this time (UNIX epoch, miliseconds)
   oldest_logs_first false   # When true fetch the oldest logs first
+  drop_blank_events true    # Fluentd may throw an exception if a blank event is emitted
   telemetry false           # Produce statsd telemetry
   statsd_endpoint localhost # Endpoint to which telemetry should be sent
   <parse>
