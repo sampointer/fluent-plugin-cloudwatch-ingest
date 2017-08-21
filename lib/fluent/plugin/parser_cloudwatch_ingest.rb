@@ -99,7 +99,7 @@ module Fluent
           metric(
             :gauge,
             'parser.plugin_skew',
-            now - event.timestamp
+            now.strftime('%Q').to_i - event.timestamp
           )
         end
 
