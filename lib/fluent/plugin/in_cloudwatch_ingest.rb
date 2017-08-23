@@ -336,8 +336,6 @@ module Fluent::Plugin
                 next
               end
             end
-            log.info("#{@log_streams_next_token} next token")
-            log.info("#{@finished} finished")
           end while !@log_streams_next_token.nil? && !@finished # don't try to get and process all streams at once
           log.info("#{event_count} events processed for group #{group}")
         end
