@@ -224,7 +224,7 @@ module Fluent::Plugin
           @log_streams_next_token = response.next_token
         end
       rescue => boom
-        prefix_message = !log_stream_name_prefix.empty? "with stream prefix #{log_stream_name_prefix}" else ''
+        prefix_message = !log_stream_name_prefix.empty? ? "with stream prefix #{log_stream_name_prefix}" : ''
         log.error("Unable to retrieve log streams for group #{log_group_name} #{prefix_message}: #{boom.inspect}") # rubocop:disable LineLength
         metric(:increment, 'api.calls.describelogstreams.failed')
         sleep @error_interval
