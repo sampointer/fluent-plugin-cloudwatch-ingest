@@ -300,56 +300,57 @@ module Fluent::Plugin
         # For each log group
         log_groups(@log_group_name_prefix).each do |group|
           loop do
-          begin
-            # Fetch log group streams and emit the events
-            log_streams(group, @log_stream_name_prefix).each do |stream|
-              state.store[group][stream] = {} unless state.store[group][stream]
+            begin
+              # Fetch log group streams and emit the events
+              log_streams(group, @log_stream_name_prefix).each do |stream|
+                state.store[group][stream] = {} unless state.store[group][stream]
 
-              log.info("processing stream: #{stream}")
+                log.info("processing stream: #{stream}")
 
-              # See if we have some stored state for this group and stream.
-              # If we have then use the stored forward_token to pick up
-              # from that point. Otherwise start from the start.
+                # See if we have some stored state for this group and stream.
+                # If we have then use the stored forward_token to pick up
+                # from that point. Otherwise start from the start.
 
-              begin
-                event_count += process_stream(group,
-                                              stream,
-                                              state.store[group][stream]['token'],
-                                              @event_start_time,
-                                              state)
-              rescue Aws::CloudWatchLogs::Errors::InvalidParameterException
-                metric(:increment, 'api.calls.getlogevents.invalid_token')
-                log.error('cloudwatch token is expired or broken. trying with timestamp.')
-
-                # try again with timestamp instead of forward token
                 begin
-                  timestamp = state.store[group][stream]['timestamp']
-                  timestamp = @event_start_time unless timestamp
-
                   event_count += process_stream(group,
                                                 stream,
-                                                nil,
-                                                timestamp,
+                                                state.store[group][stream]['token'],
+                                                @event_start_time,
                                                 state)
+                rescue Aws::CloudWatchLogs::Errors::InvalidParameterException
+                  metric(:increment, 'api.calls.getlogevents.invalid_token')
+                  log.error('cloudwatch token is expired or broken. trying with timestamp.')
+
+                  # try again with timestamp instead of forward token
+                  begin
+                    timestamp = state.store[group][stream]['timestamp']
+                    timestamp = @event_start_time unless timestamp
+
+                    event_count += process_stream(group,
+                                                  stream,
+                                                  nil,
+                                                  timestamp,
+                                                  state)
+                  rescue => boom
+                    log.error("Unable to retrieve events for stream #{stream} in group #{group}: "\
+                              "#{boom.inspect}")
+                    metric(:increment, 'api.calls.getlogevents.failed')
+                    sleep @error_interval
+                    next
+                  end
                 rescue => boom
-                  log.error("Unable to retrieve events for stream #{stream} in group #{group}: "\
-                            "#{boom.inspect}")
+                  log.error("Unable to retrieve events for stream #{stream} "\
+                            "in group #{group}: #{boom.inspect}")
                   metric(:increment, 'api.calls.getlogevents.failed')
                   sleep @error_interval
                   next
                 end
-              rescue => boom
-                log.error("Unable to retrieve events for stream #{stream} "\
-                          "in group #{group}: #{boom.inspect}")
-                metric(:increment, 'api.calls.getlogevents.failed')
-                sleep @error_interval
-                next
               end
+              # process log streams in batches
+              break if @log_streams_next_token.nil? || @finished
             end
-            # process log streams in batches
-            break if @log_streams_next_token.nil? || @finished
+            log.info("#{event_count} events processed for group #{group}")
           end
-          log.info("#{event_count} events processed for group #{group}")
         end
 
         log.info('Saving state')
