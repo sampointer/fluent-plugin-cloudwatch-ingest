@@ -124,7 +124,7 @@ module Fluent::Plugin
           role_session_name: @sts_session_name
         )
 
-        log.info('Using STS for authentication with source account ARN: ' \
+        log.info('Using STS for authentication with source account ARN: '\
                  "#{@sts_arn}, session name: #{@sts_session_name}")
       else
         log.info('Using local instance IAM role for authentication')
@@ -144,7 +144,7 @@ module Fluent::Plugin
     def emit(event, log_group_name, log_stream_name)
       @parser.parse(event, log_group_name, log_stream_name) do |time, record|
         if record['message'].chomp.empty? && @drop_blank_events
-          log.warn('Event is blank or contains only a newline, refusing to emit.' \
+          log.warn('Event is blank or contains only a newline, refusing to emit.'\
                    "group: #{log_group_name}, stream: #{log_stream_name}, event: #{event}")
           metric(:increment, 'events.emitted.blocked')
           next
@@ -177,7 +177,7 @@ module Fluent::Plugin
           response.log_groups.each do |group|
             if !@log_group_exclude_regexp.empty?
               if regex.match(group.log_group_name)
-                log.info("Excluding log_group #{group.log_group_name} due to " \
+                log.info("Excluding log_group #{group.log_group_name} due to "\
                          "log_group_exclude_regexp #{@log_group_exclude_regexp}")
                 metric(:increment, 'api.calls.describeloggroups.excluded')
               else
@@ -228,7 +228,7 @@ module Fluent::Plugin
         end
       rescue => boom
         prefix_message = !log_stream_name_prefix.empty? ? "with stream prefix #{log_stream_name_prefix}" : ''
-        log.error('Unable to retrieve log streams ' \
+        log.error('Unable to retrieve log streams '\
                   "for group #{log_group_name} #{prefix_message}: #{boom.inspect}")
         metric(:increment, 'api.calls.describelogstreams.failed')
         sleep @error_interval
@@ -290,8 +290,8 @@ module Fluent::Plugin
         begin
           state = State.new(@state_file_name, log)
         rescue => boom
-          log.info("Failed lock state. Sleeping for #{@error_interval}:" \
-                   " #{boom.inspect}")
+          log.info("Failed lock state. Sleeping for #{@error_interval}: "\
+                   "#{boom.inspect}")
           sleep @error_interval
           next
         end
@@ -332,15 +332,15 @@ module Fluent::Plugin
                                                 timestamp,
                                                 state)
                 rescue => boom
-                  log.error("Unable to retrieve events for stream #{stream} in group #{group}:"\
-                            " #{boom.inspect}")
+                  log.error("Unable to retrieve events for stream #{stream} in group #{group}: "\
+                            "#{boom.inspect}")
                   metric(:increment, 'api.calls.getlogevents.failed')
                   sleep @error_interval
                   next
                 end
               rescue => boom
-                log.error("Unable to retrieve events for stream #{stream} in group #{group}:" \
-                          " #{boom.inspect}")
+                log.error("Unable to retrieve events for stream #{stream} "\
+                          "in group #{group}: #{boom.inspect}")
                 metric(:increment, 'api.calls.getlogevents.failed')
                 sleep @error_interval
                 next
@@ -393,8 +393,8 @@ module Fluent::Plugin
             self.statefile = Pathname.new(@filepath).open('w+')
             save
           rescue => boom
-            @log.error("Unable to create new file #{statefile.path}:" \
-                       " #{boom.inspect}")
+            @log.error("Unable to create new file #{statefile.path}: "\
+                       "#{boom.inspect}")
           end
         end
 
