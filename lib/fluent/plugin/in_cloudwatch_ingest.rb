@@ -120,8 +120,8 @@ module Fluent::Plugin
 
       if @sts_enabled
         aws_options[:credentials] = Aws::AssumeRoleCredentials.new(
-            role_arn: @sts_arn,
-            role_session_name: @sts_session_name
+          role_arn: @sts_arn,
+          role_session_name: @sts_session_name
         )
 
         log.info("Using STS for authentication with source account ARN: #{@sts_arn}, session name: #{@sts_session_name}") # rubocop:disable LineLength
@@ -398,7 +398,7 @@ module Fluent::Plugin
           @store.each do |_group, streams|
             streams.update(streams) do |_name, stream|
               if stream.is_a? String
-                return {'token' => stream, 'timestamp' => Time.now.to_i}
+                return { 'token' => stream, 'timestamp' => Time.now.to_i }
               end
               return stream
             end
