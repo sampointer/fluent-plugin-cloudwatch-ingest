@@ -27,7 +27,7 @@ module Fluent::Plugin
     desc 'Log group regexp to exclude, despite matching'
     config_param :log_group_exclude_regexp, :string, default: ''
     desc 'State file name'
-    config_param :state_file_name, :string, default: '/var/spool/td-agent/cloudwatch.state' # rubocop:disable LineLength
+    config_param :state_file_name, :string, default: '/var/spool/td-agent/cloudwatch.state'
     desc 'Fetch logs every interval'
     config_param :interval, :time, default: 60
     desc 'Time to pause between error conditions'
@@ -40,7 +40,7 @@ module Fluent::Plugin
     desc 'Limit the number of events fetched in any iteration'
     config_param :limit_events, :integer, default: 10_000
     desc 'Limit the number of log streams to be processed with each iteration'
-    config_param :max_log_streams_per_group, :integer, default: 50 # 50 is the default value for 'limit' on AWS API calls
+    config_param :max_log_streams_per_group, :integer, default: 50 # default 'limit' for API calls
     desc 'Do not fetch events before this time'
     config_param :event_start_time, :integer, default: 0
     desc 'Fetch the oldest logs first'
@@ -72,10 +72,10 @@ module Fluent::Plugin
 
     def metric(method, name, value = 0)
       case method
-        when :increment
-          @statsd.send(method, name) if @telemetry
-        else
-          @statsd.send(method, name, value) if @telemetry
+      when :increment
+        @statsd.send(method, name) if @telemetry
+      else
+        @statsd.send(method, name, value) if @telemetry
       end
     end
 
@@ -124,7 +124,8 @@ module Fluent::Plugin
           role_session_name: @sts_session_name
         )
 
-        log.info("Using STS for authentication with source account ARN: #{@sts_arn}, session name: #{@sts_session_name}") # rubocop:disable LineLength
+        log.info('Using STS for authentication with source account ARN: ' \
+                 "#{@sts_arn}, session name: #{@sts_session_name}")
       else
         log.info('Using local instance IAM role for authentication')
       end
@@ -143,7 +144,8 @@ module Fluent::Plugin
     def emit(event, log_group_name, log_stream_name)
       @parser.parse(event, log_group_name, log_stream_name) do |time, record|
         if record['message'].chomp.empty? && @drop_blank_events
-          log.warn("Event is blank or contains only a newline, refusing to emit. group: #{log_group_name}, stream: #{log_stream_name}, event: #{event}") # rubocop:disable LineLength
+          log.warn('Event is blank or contains only a newline, refusing to emit.' \
+                   "group: #{log_group_name}, stream: #{log_stream_name}, event: #{event}")
           metric(:increment, 'events.emitted.blocked')
           next
         end
@@ -175,7 +177,8 @@ module Fluent::Plugin
           response.log_groups.each do |group|
             if !@log_group_exclude_regexp.empty?
               if regex.match(group.log_group_name)
-                log.info("Excluding log_group #{group.log_group_name} due to log_group_exclude_regexp #{@log_group_exclude_regexp}") # rubocop:disable LineLength
+                log.info("Excluding log_group #{group.log_group_name} due to " \
+                         "log_group_exclude_regexp #{@log_group_exclude_regexp}")
                 metric(:increment, 'api.calls.describeloggroups.excluded')
               else
                 log_groups << group.log_group_name
@@ -219,13 +222,14 @@ module Fluent::Plugin
                      )
                    end
 
-        response.log_streams.each {|s| log_streams << s.log_stream_name}
+        response.log_streams.each { |s| log_streams << s.log_stream_name }
         if log_streams.size == @max_log_streams_per_group
           @log_streams_next_token = response.next_token
         end
       rescue => boom
         prefix_message = !log_stream_name_prefix.empty? ? "with stream prefix #{log_stream_name_prefix}" : ''
-        log.error("Unable to retrieve log streams for group #{log_group_name} #{prefix_message}: #{boom.inspect}") # rubocop:disable LineLength
+        log.error('Unable to retrieve log streams ' \
+                  "for group #{log_group_name} #{prefix_message}: #{boom.inspect}")
         metric(:increment, 'api.calls.describelogstreams.failed')
         sleep @error_interval
         retry
@@ -270,9 +274,11 @@ module Fluent::Plugin
         # in this iteration, store the forward token
         state.new_store[group][stream]['token'] = response.next_forward_token
         if response.events.last
-          state.new_store[group][stream]['timestamp'] = response.events.last.timestamp
+          state.new_store[group][stream]['timestamp'] =
+            response.events.last.timestamp
         else
-          state.new_store[group][stream]['timestamp'] = state.store[group][stream]['timestamp']
+          state.new_store[group][stream]['timestamp'] =
+            state.store[group][stream]['timestamp']
         end
       end
 
@@ -284,7 +290,8 @@ module Fluent::Plugin
         begin
           state = State.new(@state_file_name, log)
         rescue => boom
-          log.info("Failed lock state. Sleeping for #{@error_interval}: #{boom.inspect}")
+          log.info("Failed lock state. Sleeping for #{@error_interval}:" \
+                   " #{boom.inspect}")
           sleep @error_interval
           next
         end
@@ -292,6 +299,7 @@ module Fluent::Plugin
         event_count = 0
         # For each log group
         log_groups(@log_group_name_prefix).each do |group|
+          loop do
           begin
             # Fetch log group streams and emit the events
             log_streams(group, @log_stream_name_prefix).each do |stream|
@@ -324,19 +332,23 @@ module Fluent::Plugin
                                                 timestamp,
                                                 state)
                 rescue => boom
-                  log.error("Unable to retrieve events for stream #{stream} in group #{group}: #{boom.inspect}") # rubocop:disable all
+                  log.error("Unable to retrieve events for stream #{stream} in group #{group}:"\
+                            " #{boom.inspect}")
                   metric(:increment, 'api.calls.getlogevents.failed')
                   sleep @error_interval
                   next
                 end
               rescue => boom
-                log.error("Unable to retrieve events for stream #{stream} in group #{group}: #{boom.inspect}") # rubocop:disable LineLength
+                log.error("Unable to retrieve events for stream #{stream} in group #{group}:" \
+                          " #{boom.inspect}")
                 metric(:increment, 'api.calls.getlogevents.failed')
                 sleep @error_interval
                 next
               end
             end
-          end while !@log_streams_next_token.nil? && !@finished # don't try to get and process all streams at once
+            # process log streams in batches
+            break if @log_streams_next_token.nil? || @finished
+          end
           log.info("#{event_count} events processed for group #{group}")
         end
 
@@ -381,7 +393,8 @@ module Fluent::Plugin
             self.statefile = Pathname.new(@filepath).open('w+')
             save
           rescue => boom
-            @log.error("Unable to create new file #{statefile.path}: #{boom.inspect}")
+            @log.error("Unable to create new file #{statefile.path}:" \
+                       " #{boom.inspect}")
           end
         end
 
@@ -389,7 +402,7 @@ module Fluent::Plugin
         # exception if we can't
         @log.info("Obtaining exclusive lock on state file #{statefile.path}")
         lockstatus = statefile.flock(File::LOCK_EX | File::LOCK_NB)
-        raise CloudwatchIngestInput::State::LockFailed if lockstatus == false
+        raise CloudwatchIngestInput::State::LockFailed unless lockstatus
 
         begin
           @store.merge!(Psych.safe_load(statefile.read))
