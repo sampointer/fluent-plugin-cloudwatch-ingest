@@ -27,7 +27,8 @@ module Fluent::Plugin
     desc 'Log group regexp to exclude, despite matching'
     config_param :log_group_exclude_regexp, :string, default: ''
     desc 'State file name'
-    config_param :state_file_name, :string, default: '/var/spool/td-agent/cloudwatch.state'
+    config_param :state_file_name, :string, default: \
+      '/var/spool/td-agent/cloudwatch.state'
     desc 'Fetch logs every interval'
     config_param :interval, :time, default: 60
     desc 'Time to pause between error conditions'
@@ -40,7 +41,7 @@ module Fluent::Plugin
     desc 'Limit the number of events fetched in any iteration'
     config_param :limit_events, :integer, default: 10_000
     desc 'Limit the number of log streams to be processed with each iteration'
-    config_param :max_log_streams_per_group, :integer, default: 50 # default 'limit' for API calls
+    config_param :max_log_streams_per_group, :integer, default: 50
     desc 'Do not fetch events before this time'
     config_param :event_start_time, :integer, default: 0
     desc 'Fetch the oldest logs first'
@@ -144,8 +145,11 @@ module Fluent::Plugin
     def emit(event, log_group_name, log_stream_name)
       @parser.parse(event, log_group_name, log_stream_name) do |time, record|
         if record['message'].chomp.empty? && @drop_blank_events
-          log.warn('Event is blank or contains only a newline, refusing to emit.'\
-                   "group: #{log_group_name}, stream: #{log_stream_name}, event: #{event}")
+          log.warn(
+            'Event is blank or contains only a newline, refusing to '\
+            "emit. group: #{log_group_name}, "\
+            "stream: #{log_stream_name}, event: #{event}"\
+          )
           metric(:increment, 'events.emitted.blocked')
           next
         end
@@ -177,8 +181,10 @@ module Fluent::Plugin
           response.log_groups.each do |group|
             if !@log_group_exclude_regexp.empty?
               if regex.match(group.log_group_name)
-                log.info("Excluding log_group #{group.log_group_name} due to "\
-                         "log_group_exclude_regexp #{@log_group_exclude_regexp}")
+                log.info(
+                  "Excluding log_group #{group.log_group_name} due to "\
+                  "log_group_exclude_regexp #{@log_group_exclude_regexp}"\
+                )
                 metric(:increment, 'api.calls.describeloggroups.excluded')
               else
                 log_groups << group.log_group_name
