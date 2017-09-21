@@ -324,7 +324,7 @@ module Fluent::Plugin
                   # try again with timestamp instead of forward token
                   begin
                     timestamp = state.store[group][stream]['timestamp']
-                    timestamp = @event_start_time unless timestamp
+                    timestamp ||= @event_start_time
 
                     event_count += process_stream(group,
                                                   stream,
@@ -362,11 +362,11 @@ module Fluent::Plugin
         end
 
         if !@finished # no need to sleep if it's finished
-          if event_count > 0
-            sleep_interval = @interval
-          else
-            sleep_interval = @error_interval # when there are no events, slow down
-          end
+          sleep_interval = if event_count > 0
+                             @interval
+                           else
+                             @error_interval # when there are no events, slow down
+                           end
 
           log.info("Pausing for #{sleep_interval}")
           sleep sleep_interval
