@@ -227,10 +227,17 @@ module Fluent::Plugin
           @log_streams_next_token = response.next_token
         end
       rescue StandardError => boom
-        prefix_message = !log_stream_name_prefix.empty? ? "with stream prefix #{log_stream_name_prefix}" : ''
+        if !log_stream_name_prefix.empty?
+          prefix_message = "with stream prefix #{log_stream_name_prefix}"
+        else
+          prefix_message = ''
+        end
+
         log.error('Unable to retrieve log streams '\
-                  "for group #{log_group_name} #{prefix_message}: #{boom.inspect}")
+                  "for group #{log_group_name} #{prefix_message}: "\
+                  "#{boom.inspect}")
         metric(:increment, 'api.calls.describelogstreams.failed')
+
         sleep @error_interval
         retry
       end
@@ -303,7 +310,9 @@ module Fluent::Plugin
             begin
               # Fetch log group streams and emit the events
               log_streams(group, @log_stream_name_prefix).each do |stream|
-                state.store[group][stream] = {} unless state.store[group][stream]
+                unless state.store[group][stream]
+                  state.store[group][stream] = {}
+                end
 
                 log.info("processing stream: #{stream}")
 
@@ -312,14 +321,19 @@ module Fluent::Plugin
                 # from that point. Otherwise start from the start.
 
                 begin
-                  event_count += process_stream(group,
-                                                stream,
-                                                state.store[group][stream]['token'],
-                                                @event_start_time,
-                                                state)
+                  event_count += process_stream(
+                    group,
+                    stream,
+                    state.store[group][stream]['token'],
+                    @event_start_time,
+                    state
+                  )
                 rescue Aws::CloudWatchLogs::Errors::InvalidParameterException
                   metric(:increment, 'api.calls.getlogevents.invalid_token')
-                  log.error('cloudwatch token is expired or broken. trying with timestamp.')
+                  log.error(
+                    'cloudwatch token is expired or broken. '\
+                    'trying with timestamp.'
+                  )
 
                   # try again with timestamp instead of forward token
                   begin
@@ -333,7 +347,7 @@ module Fluent::Plugin
                                                   state)
                   rescue StandardError => boom
                     log.error(
-                      "Unable to retrieve events for stream "\
+                      'Unable to retrieve events for stream '\
                       "#{stream} in group #{group}: "\
                       "#{boom.inspect}"\
                     )
