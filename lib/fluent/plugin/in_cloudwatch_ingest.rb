@@ -27,7 +27,7 @@ module Fluent::Plugin
     desc 'Log group regexp to exclude, despite matching'
     config_param :log_group_exclude_regexp, :string, default: ''
     desc 'State file name'
-    config_param :state_file_name, :string, default: '/var/spool/td-agent/cloudwatch.state' # rubocop:disable LineLength
+    config_param :state_file_name, :string, default: '/var/spool/td-agent/cloudwatch.state'
     desc 'Fetch logs every interval'
     config_param :interval, :time, default: 60
     desc 'Time to pause between error conditions'
@@ -39,6 +39,8 @@ module Fluent::Plugin
     config_param :aws_logging_enabled, :bool, default: false
     desc 'Limit the number of events fetched in any iteration'
     config_param :limit_events, :integer, default: 10_000
+    desc 'Limit the number of log streams to be processed with each iteration'
+    config_param :max_log_streams_per_group, :integer, default: 50 # default 'limit' for API calls
     desc 'Do not fetch events before this time'
     config_param :event_start_time, :integer, default: 0
     desc 'Fetch the oldest logs first'
@@ -102,6 +104,8 @@ module Fluent::Plugin
 
       @parser = parser_create(conf: parser_config)
       log.info('Configured fluentd-plugin-cloudwatch-ingest')
+
+      @log_streams_next_token = nil
     end
 
     def start
@@ -120,7 +124,8 @@ module Fluent::Plugin
           role_session_name: @sts_session_name
         )
 
-        log.info("Using STS for authentication with source account ARN: #{@sts_arn}, session name: #{@sts_session_name}") # rubocop:disable LineLength
+        log.info('Using STS for authentication with source account ARN: '\
+                 "#{@sts_arn}, session name: #{@sts_session_name}")
       else
         log.info('Using local instance IAM role for authentication')
       end
@@ -139,7 +144,8 @@ module Fluent::Plugin
     def emit(event, log_group_name, log_stream_name)
       @parser.parse(event, log_group_name, log_stream_name) do |time, record|
         if record['message'].chomp.empty? && @drop_blank_events
-          log.warn("Event is blank or contains only a newline, refusing to emit. group: #{log_group_name}, stream: #{log_stream_name}, event: #{event}") # rubocop:disable LineLength
+          log.warn('Event is blank or contains only a newline, refusing to emit.'\
+                   "group: #{log_group_name}, stream: #{log_stream_name}, event: #{event}")
           metric(:increment, 'events.emitted.blocked')
           next
         end
@@ -171,7 +177,8 @@ module Fluent::Plugin
           response.log_groups.each do |group|
             if !@log_group_exclude_regexp.empty?
               if regex.match(group.log_group_name)
-                log.info("Excluding log_group #{group.log_group_name} due to log_group_exclude_regexp #{@log_group_exclude_regexp}") # rubocop:disable LineLength
+                log.info("Excluding log_group #{group.log_group_name} due to "\
+                         "log_group_exclude_regexp #{@log_group_exclude_regexp}")
                 metric(:increment, 'api.calls.describeloggroups.excluded')
               else
                 log_groups << group.log_group_name
@@ -197,35 +204,37 @@ module Fluent::Plugin
 
     def log_streams(log_group_name, log_stream_name_prefix)
       log_streams = []
-      next_token = nil
-      loop do
-        begin
-          metric(:increment, 'api.calls.describelogstreams.attempted')
-          response = if !log_stream_name_prefix.empty?
-                       @aws.describe_log_streams(
-                         log_group_name: log_group_name,
-                         log_stream_name_prefix: log_stream_name_prefix,
-                         next_token: next_token
-                       )
-                     else
-                       @aws.describe_log_streams(
-                         log_group_name: log_group_name,
-                         next_token: next_token
-                       )
-                     end
 
-          response.log_streams.each { |s| log_streams << s.log_stream_name }
-          break unless response.next_token
-          next_token = response.next_token
-        rescue => boom
-          log.error("Unable to retrieve log streams for group #{log_group_name} with stream prefix #{log_stream_name_prefix}: #{boom.inspect}") # rubocop:disable LineLength
-          metric(:increment, 'api.calls.describelogstreams.failed')
-          log_streams = []
-          next_token = nil
-          sleep @error_interval
-          retry
+      begin
+        metric(:increment, 'api.calls.describelogstreams.attempted')
+        response = if !log_stream_name_prefix.empty?
+                     @aws.describe_log_streams(
+                       log_group_name: log_group_name,
+                       log_stream_name_prefix: log_stream_name_prefix,
+                       next_token: @log_streams_next_token,
+                       limit: @max_log_streams_per_group
+                     )
+                   else
+                     @aws.describe_log_streams(
+                       log_group_name: log_group_name,
+                       next_token: @log_streams_next_token,
+                       limit: @max_log_streams_per_group
+                     )
+                   end
+
+        response.log_streams.each { |s| log_streams << s.log_stream_name }
+        if log_streams.size == @max_log_streams_per_group
+          @log_streams_next_token = response.next_token
         end
+      rescue => boom
+        prefix_message = !log_stream_name_prefix.empty? ? "with stream prefix #{log_stream_name_prefix}" : ''
+        log.error('Unable to retrieve log streams '\
+                  "for group #{log_group_name} #{prefix_message}: #{boom.inspect}")
+        metric(:increment, 'api.calls.describelogstreams.failed')
+        sleep @error_interval
+        retry
       end
+
       log.info("Found #{log_streams.size} streams for #{log_group_name}")
 
       return log_streams
@@ -252,6 +261,8 @@ module Fluent::Plugin
           log.error("Failed to emit event #{e}: #{boom.inspect}")
         end
       end
+
+      log.info("#{event_count} events processed for stream #{stream}")
 
       has_stream_timestamp = true if state.store[group][stream]['timestamp']
 
@@ -286,48 +297,59 @@ module Fluent::Plugin
         end
 
         event_count = 0
-
-        # Fetch the streams for each log group
+        # For each log group
         log_groups(@log_group_name_prefix).each do |group|
-          # For each log stream get and emit the events
-          log_streams(group, @log_stream_name_prefix).each do |stream|
-            state.store[group][stream] = {} unless state.store[group][stream]
-
-            log.info("processing stream: #{stream}")
-
-            # See if we have some stored state for this group and stream.
-            # If we have then use the stored forward_token to pick up
-            # from that point. Otherwise start from the start.
-
+          loop do
             begin
-              event_count += process_stream(group, stream,
-                                            state.store[group][stream]['token'],
-                                            @event_start_time, state)
-            rescue Aws::CloudWatchLogs::Errors::InvalidParameterException
-              metric(:increment, 'api.calls.getlogevents.invalid_token')
-              log.error('cloudwatch token is expired or broken. '\
-                        'trying with timestamp.')
+              # Fetch log group streams and emit the events
+              log_streams(group, @log_stream_name_prefix).each do |stream|
+                state.store[group][stream] = {} unless state.store[group][stream]
 
-              # try again with timestamp instead of forward token
-              begin
-                timestamp = state.store[group][stream]['timestamp']
-                timestamp = @event_start_time unless timestamp
+                log.info("processing stream: #{stream}")
 
-                event_count += process_stream(group, stream,
-                                              nil, timestamp, state)
-              rescue => boom
-                log.error("Unable to retrieve events for stream #{stream} "\
-                          "in group #{group}: #{boom.inspect}") # rubocop:disable all
-                metric(:increment, 'api.calls.getlogevents.failed')
-                sleep @error_interval
-                next
+                # See if we have some stored state for this group and stream.
+                # If we have then use the stored forward_token to pick up
+                # from that point. Otherwise start from the start.
+
+                begin
+                  event_count += process_stream(group,
+                                                stream,
+                                                state.store[group][stream]['token'],
+                                                @event_start_time,
+                                                state)
+                rescue Aws::CloudWatchLogs::Errors::InvalidParameterException
+                  metric(:increment, 'api.calls.getlogevents.invalid_token')
+                  log.error('cloudwatch token is expired or broken. trying with timestamp.')
+
+                  # try again with timestamp instead of forward token
+                  begin
+                    timestamp = state.store[group][stream]['timestamp']
+                    timestamp = @event_start_time unless timestamp
+
+                    event_count += process_stream(group,
+                                                  stream,
+                                                  nil,
+                                                  timestamp,
+                                                  state)
+                  rescue => boom
+                    log.error("Unable to retrieve events for stream #{stream} in group #{group}: "\
+                              "#{boom.inspect}")
+                    metric(:increment, 'api.calls.getlogevents.failed')
+                    sleep @error_interval
+                    next
+                  end
+                rescue => boom
+                  log.error("Unable to retrieve events for stream #{stream} "\
+                            "in group #{group}: #{boom.inspect}")
+                  metric(:increment, 'api.calls.getlogevents.failed')
+                  sleep @error_interval
+                  next
+                end
               end
-            rescue => boom
-              log.error("Unable to retrieve events for stream #{stream} in group #{group}: #{boom.inspect}") # rubocop:disable LineLength
-              metric(:increment, 'api.calls.getlogevents.failed')
-              sleep @error_interval
-              next
+              # process log streams in batches
+              break if @log_streams_next_token.nil? || @finished
             end
+            log.info("#{event_count} events processed for group #{group}")
           end
         end
 
@@ -339,15 +361,18 @@ module Fluent::Plugin
           log.error("Unable to save state file: #{boom.inspect}")
         end
 
-        if event_count > 0
-          sleep_interval = @interval
-        else
-          sleep_interval = @error_interval # when there is no events, slow down
-        end
+        if !@finished # no need to sleep if it's finished
+          if event_count > 0
+            sleep_interval = @interval
+          else
+            sleep_interval = @error_interval # when there are no events, slow down
+          end
 
-        log.info("#{event_count} events processed.")
-        log.info("Pausing for #{sleep_interval}")
-        sleep sleep_interval
+          log.info("Pausing for #{sleep_interval}")
+          sleep sleep_interval
+        else
+          log.info('Stopping fluentd-plugin-cloudwatch-ingest')
+        end
       end
     end
 
@@ -378,7 +403,7 @@ module Fluent::Plugin
         # exception if we can't
         @log.info("Obtaining exclusive lock on state file #{statefile.path}")
         lockstatus = statefile.flock(File::LOCK_EX | File::LOCK_NB)
-        raise CloudwatchIngestInput::State::LockFailed if lockstatus == false
+        raise CloudwatchIngestInput::State::LockFailed unless lockstatus
 
         begin
           @store.merge!(Psych.safe_load(statefile.read))
