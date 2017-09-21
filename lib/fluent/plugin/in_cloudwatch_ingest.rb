@@ -189,7 +189,7 @@ module Fluent::Plugin
           end
           break unless response.next_token
           next_token = response.next_token
-        rescue => boom
+        rescue StandardError => boom
           log.error("Unable to retrieve log groups: #{boom.inspect}")
           metric(:increment, 'api.calls.describeloggroups.failed')
           next_token = nil
@@ -226,7 +226,7 @@ module Fluent::Plugin
         if log_streams.size == @max_log_streams_per_group
           @log_streams_next_token = response.next_token
         end
-      rescue => boom
+      rescue StandardError => boom
         prefix_message = !log_stream_name_prefix.empty? ? "with stream prefix #{log_stream_name_prefix}" : ''
         log.error('Unable to retrieve log streams '\
                   "for group #{log_group_name} #{prefix_message}: #{boom.inspect}")
@@ -257,7 +257,7 @@ module Fluent::Plugin
         begin
           emit(e, group, stream)
           event_count += 1
-        rescue => boom
+        rescue StandardError => boom
           log.error("Failed to emit event #{e}: #{boom.inspect}")
         end
       end
@@ -289,7 +289,7 @@ module Fluent::Plugin
       until @finished
         begin
           state = State.new(@state_file_name, log)
-        rescue => boom
+        rescue StandardError => boom
           log.info("Failed lock state. Sleeping for #{@error_interval}: "\
                    "#{boom.inspect}")
           sleep @error_interval
@@ -331,14 +331,14 @@ module Fluent::Plugin
                                                   nil,
                                                   timestamp,
                                                   state)
-                  rescue => boom
+                  rescue StandardError => boom
                     log.error("Unable to retrieve events for stream #{stream} in group #{group}: "\
                               "#{boom.inspect}")
                     metric(:increment, 'api.calls.getlogevents.failed')
                     sleep @error_interval
                     next
                   end
-                rescue => boom
+                rescue StandardError => boom
                   log.error("Unable to retrieve events for stream #{stream} "\
                             "in group #{group}: #{boom.inspect}")
                   metric(:increment, 'api.calls.getlogevents.failed')
@@ -357,7 +357,7 @@ module Fluent::Plugin
         begin
           state.save
           state.close
-        rescue => boom
+        rescue StandardError => boom
           log.error("Unable to save state file: #{boom.inspect}")
         end
 
@@ -393,7 +393,7 @@ module Fluent::Plugin
           begin
             self.statefile = Pathname.new(@filepath).open('w+')
             save
-          rescue => boom
+          rescue StandardError => boom
             @log.error("Unable to create new file #{statefile.path}: "\
                        "#{boom.inspect}")
           end
@@ -419,7 +419,7 @@ module Fluent::Plugin
           end
 
           @log.info("Loaded #{@store.keys.size} groups from #{statefile.path}")
-        rescue
+        rescue StandardError
           statefile.close
           raise
         end
