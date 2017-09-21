@@ -332,8 +332,11 @@ module Fluent::Plugin
                                                   timestamp,
                                                   state)
                   rescue StandardError => boom
-                    log.error("Unable to retrieve events for stream #{stream} in group #{group}: "\
-                              "#{boom.inspect}")
+                    log.error(
+                      "Unable to retrieve events for stream "\
+                      "#{stream} in group #{group}: "\
+                      "#{boom.inspect}"\
+                    )
                     metric(:increment, 'api.calls.getlogevents.failed')
                     sleep @error_interval
                     next
@@ -365,7 +368,7 @@ module Fluent::Plugin
           sleep_interval = if event_count > 0
                              @interval
                            else
-                             @error_interval # when there are no events, slow down
+                             @error_interval # slow down when no events
                            end
 
           log.info("Pausing for #{sleep_interval}")
@@ -409,7 +412,7 @@ module Fluent::Plugin
           @store.merge!(Psych.safe_load(statefile.read))
 
           # Migrate old state file
-          @store.each do |_group, streams|
+          @store.each_value do |streams|
             streams.update(streams) do |_name, stream|
               if stream.is_a? String
                 return { 'token' => stream, 'timestamp' => Time.now.to_i }
