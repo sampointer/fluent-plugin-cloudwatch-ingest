@@ -1,5 +1,6 @@
 # rubocop:disable Metrics/BlockLength
-require 'aws-sdk'
+require 'aws-sdk-core'
+require 'aws-sdk-cloudwatch'
 require 'fluent/config/error'
 require 'fluent/plugin/input'
 require 'fluent/plugin/parser'
