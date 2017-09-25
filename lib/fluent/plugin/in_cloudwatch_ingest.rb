@@ -234,10 +234,10 @@ module Fluent::Plugin
           @log_streams_next_token = response.next_token
         end
       rescue StandardError => boom
-        if !log_stream_name_prefix.empty?
-          prefix_message = "with stream prefix #{log_stream_name_prefix}"
+        prefix_message = if log_stream_name_prefix.empty?
+          ''
         else
-          prefix_message = ''
+          "with stream prefix #{log_stream_name_prefix}"
         end
 
         log.error('Unable to retrieve log streams '\
