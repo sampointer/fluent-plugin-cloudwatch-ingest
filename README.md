@@ -60,7 +60,7 @@ Or install it yourself as:
     parse_json_body false                       # Attempt to parse the body as json and add structured fields from the result
     fail_on_unparsable_json false               # If the body cannot be parsed as json do not ingest the record
     telemetry false                             # Produce statsd telemetry
-    statsd_endpoint localhost              # Endpoint to which telemetry should be sent
+    statsd_endpoint localhost                   # Endpoint to which telemetry should be sent
   </parse>
 </source>
 ```
