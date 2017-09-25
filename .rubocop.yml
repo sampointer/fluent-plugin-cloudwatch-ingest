@@ -1,5 +1,9 @@
+AllCops:
+  DisplayCopNames: true
 Metrics/MethodLength:
-  Max: 200
+  Enabled: false
+Metrics/BlockLength:
+  Enabled: false
 Style/Documentation:
   Enabled: false
 Style/ClassAndModuleChildren:
