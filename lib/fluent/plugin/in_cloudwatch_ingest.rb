@@ -235,10 +235,10 @@ module Fluent::Plugin
         end
       rescue StandardError => boom
         prefix_message = if log_stream_name_prefix.empty?
-          ''
-        else
-          "with stream prefix #{log_stream_name_prefix}"
-        end
+                           ''
+                         else
+                           "with stream prefix #{log_stream_name_prefix}"
+                         end
 
         log.error('Unable to retrieve log streams '\
                   "for group #{log_group_name} #{prefix_message}: "\
