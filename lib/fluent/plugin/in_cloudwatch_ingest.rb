@@ -37,7 +37,7 @@ module Fluent::Plugin
     config_param :api_interval, :time
     desc 'Tag to apply to record'
     config_param :tag, :string, default: 'cloudwatch'
-    desc 'Enabled AWS SDK logging'
+    desc 'Enable AWS SDK logging'
     config_param :aws_logging_enabled, :bool, default: false
     desc 'Limit the number of events fetched in any iteration'
     config_param :limit_events, :integer, default: 10_000
