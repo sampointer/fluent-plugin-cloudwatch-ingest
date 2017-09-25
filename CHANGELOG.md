@@ -63,4 +63,3 @@ Both of these changes are designed to make debugging ingestion problems from hig
 * Limit the number of streams to be processed with each log stream describe call
 * new parameter `max_log_streams_per_group` with a default of 50 (the default value for *limit* on API calls). This can be increased or decreased to limit the throttling of calls to AWS API
 * Bail out of processing if fluentd has been stopped
- 
