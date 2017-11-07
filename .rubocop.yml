@@ -24,3 +24,5 @@ Metrics/PerceivedComplexity:
   Max: 14
 Metrics/BlockLength:
   Max: 40
+Style/DateTime:
+  Enabled: false
