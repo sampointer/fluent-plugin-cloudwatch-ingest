@@ -64,3 +64,6 @@ Both of these changes are designed to make debugging ingestion problems from hig
 * new parameter `max_log_streams_per_group` with a default of 50 (the default value for *limit* on API calls). This can be increased or decreased to limit the throttling of calls to AWS API
 * Bail out of processing if fluentd has been stopped
 * Move to the modular v3 of the aws-sdk
+
+# 1.6.0
+* Move back to v2 of the aws-sdk. The rest of the ecosystem just is not ready to move and I think pushing this here will create unnecessary pain.
