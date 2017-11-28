@@ -230,9 +230,7 @@ module Fluent::Plugin
                    end
 
         response.log_streams.each { |s| log_streams << s.log_stream_name }
-        if log_streams.size == @max_log_streams_per_group
-          @log_streams_next_token = response.next_token
-        end
+        @log_streams_next_token = response.next_token
       rescue StandardError => boom
         prefix_message = if log_stream_name_prefix.empty?
                            ''
