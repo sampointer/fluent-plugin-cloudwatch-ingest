@@ -34,7 +34,7 @@ module Fluent::Plugin
     config_param :interval, :time, default: 60
     desc 'Time to pause between error conditions'
     config_param :error_interval, :time, default: 5
-    config_param :api_interval, :time
+    config_param :api_interval, :time, default: nil
     desc 'Tag to apply to record'
     config_param :tag, :string, default: 'cloudwatch'
     desc 'Enable AWS SDK logging'
