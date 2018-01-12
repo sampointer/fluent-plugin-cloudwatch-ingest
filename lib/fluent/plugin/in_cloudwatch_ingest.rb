@@ -1,4 +1,3 @@
-# rubocop:disable Metrics/BlockLength
 require 'aws-sdk'
 require 'fluent/config/error'
 require 'fluent/plugin/input'
