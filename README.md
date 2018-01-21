@@ -41,13 +41,14 @@ Or install it yourself as:
   state_file_name /mnt/nfs/cloudwatch.state
   interval 60
   max_log_streams_per_group 50
-  error_interval 5          # Time to wait between error conditions before retry
-  limit_events 10000        # Number of events to fetch in any given iteration
-  event_start_time 0        # Do not fetch events before this time (UNIX epoch, miliseconds)
-  oldest_logs_first false   # When true fetch the oldest logs first
-  drop_blank_events true    # Fluentd may throw an exception if a blank event is emitted
-  telemetry false           # Produce statsd telemetry
-  statsd_endpoint localhost # Endpoint to which telemetry should be sent
+  error_interval 5            # Time to wait between error conditions before retry
+  get_log_events_interval 0.0 # Time to pause between get_log_events to reduce throttle error 
+  limit_events 10000          # Number of events to fetch in any given iteration
+  event_start_time 0          # Do not fetch events before this time (UNIX epoch, miliseconds)
+  oldest_logs_first false     # When true fetch the oldest logs first
+  drop_blank_events true      # Fluentd may throw an exception if a blank event is emitted
+  telemetry false             # Produce statsd telemetry
+  statsd_endpoint localhost   # Endpoint to which telemetry should be sent
   <parse>
     @type cloudwatch_ingest
     expression /^(?<message>.+)$/
