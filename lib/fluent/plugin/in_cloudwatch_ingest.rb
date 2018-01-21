@@ -291,7 +291,8 @@ module Fluent::Plugin
           retry
         end
       rescue Aws::CloudWatchLogs::Errors::ThrottlingException,
-          Aws::CloudWatchLogs::Errors::ServiceUnavailableException
+          Aws::CloudWatchLogs::Errors::ServiceUnavailableException,
+          Seahorse::Client::NetworkingError
         # on temporary error, save the current state to retry next time
         if has_stream_timestamp
           state.new_store[group][stream] = state.store[group][stream]
