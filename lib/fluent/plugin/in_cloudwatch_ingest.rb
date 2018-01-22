@@ -265,24 +265,26 @@ module Fluent::Plugin
         retried = false
 
         begin
-          log.info({'log_group_name': group, 'log_stream_name': stream, 'next_token': param_next_token,
-                    'limit': @limit_events, 'start_time': param_start_time, 'start_from_head': @oldest_logs_first})
+          log.info('log_group_name' => group, 'log_stream_name' => stream,
+                   'next_token' => param_next_token, 'limit' => @limit_events,
+                   'start_time' => param_start_time, 
+                   'start_from_head' => @oldest_logs_first)
           sleep @get_log_events_interval
           response = @aws.get_log_events(
-              log_group_name: group,
-              log_stream_name: stream,
-              next_token: param_next_token,
-              limit: @limit_events,
-              start_time: param_start_time,
-              start_from_head: @oldest_logs_first
+            log_group_name: group,
+            log_stream_name: stream,
+            next_token: param_next_token,
+            limit: @limit_events,
+            start_time: param_start_time,
+            start_from_head: @oldest_logs_first
           )
         rescue Aws::CloudWatchLogs::Errors::InvalidParameterException
           raise if retried
 
           metric(:increment, 'api.calls.getlogevents.invalid_token')
           log.error(
-              'cloudwatch token is expired or broken. '\
-                    'trying with timestamp.'
+            'cloudwatch token is expired or broken. '\
+                  'trying with timestamp.'
           )
           param_next_token = nil
           param_start_time = state.store[group][stream]['timestamp']
@@ -291,13 +293,13 @@ module Fluent::Plugin
           retry
         end
       rescue Aws::CloudWatchLogs::Errors::ThrottlingException,
-          Aws::CloudWatchLogs::Errors::ServiceUnavailableException,
-          Seahorse::Client::NetworkingError
+             Aws::CloudWatchLogs::Errors::ServiceUnavailableException,
+             Seahorse::Client::NetworkingError
         # on temporary error, save the current state to retry next time
         if has_stream_timestamp
           state.new_store[group][stream] = state.store[group][stream]
         end
-        raise  # handle as error in run method
+        raise # handle as error in run method
       end
 
       response.events.each do |e|
