@@ -34,6 +34,8 @@ module Fluent::Plugin
     desc 'Time to pause between error conditions'
     config_param :error_interval, :time, default: 5
     config_param :api_interval, :time, default: nil
+    desc 'Time to pause between get_log_events to reduce throttle error'
+    config_param :get_log_events_interval, :float, default: 0.0
     desc 'Tag to apply to record'
     config_param :tag, :string, default: 'cloudwatch'
     desc 'Enable AWS SDK logging'
@@ -254,16 +256,49 @@ module Fluent::Plugin
 
     def process_stream(group, stream, next_token, start_time, state)
       event_count = 0
+      has_stream_timestamp = true if state.store[group][stream]['timestamp']
 
       metric(:increment, 'api.calls.getlogevents.attempted')
-      response = @aws.get_log_events(
-        log_group_name: group,
-        log_stream_name: stream,
-        next_token: next_token,
-        limit: @limit_events,
-        start_time: start_time,
-        start_from_head: @oldest_logs_first
-      )
+      begin
+        param_next_token = next_token
+        param_start_time = start_time
+        retried = false
+
+        begin
+          log.info({'log_group_name': group, 'log_stream_name': stream, 'next_token': param_next_token,
+                    'limit': @limit_events, 'start_time': param_start_time, 'start_from_head': @oldest_logs_first})
+          sleep @get_log_events_interval
+          response = @aws.get_log_events(
+              log_group_name: group,
+              log_stream_name: stream,
+              next_token: param_next_token,
+              limit: @limit_events,
+              start_time: param_start_time,
+              start_from_head: @oldest_logs_first
+          )
+        rescue Aws::CloudWatchLogs::Errors::InvalidParameterException
+          raise if retried
+
+          metric(:increment, 'api.calls.getlogevents.invalid_token')
+          log.error(
+              'cloudwatch token is expired or broken. '\
+                    'trying with timestamp.'
+          )
+          param_next_token = nil
+          param_start_time = state.store[group][stream]['timestamp']
+          param_start_time ||= @event_start_time
+          retried = true
+          retry
+        end
+      rescue Aws::CloudWatchLogs::Errors::ThrottlingException,
+          Aws::CloudWatchLogs::Errors::ServiceUnavailableException,
+          Seahorse::Client::NetworkingError
+        # on temporary error, save the current state to retry next time
+        if has_stream_timestamp
+          state.new_store[group][stream] = state.store[group][stream]
+        end
+        raise  # handle as error in run method
+      end
 
       response.events.each do |e|
         begin
@@ -275,8 +310,6 @@ module Fluent::Plugin
       end
 
       log.info("#{event_count} events processed for stream #{stream}")
-
-      has_stream_timestamp = true if state.store[group][stream]['timestamp']
 
       if !has_stream_timestamp && response.events.count.zero?
         # This stream has returned no data ever.
@@ -333,33 +366,6 @@ module Fluent::Plugin
                     @event_start_time,
                     state
                   )
-                rescue Aws::CloudWatchLogs::Errors::InvalidParameterException
-                  metric(:increment, 'api.calls.getlogevents.invalid_token')
-                  log.error(
-                    'cloudwatch token is expired or broken. '\
-                    'trying with timestamp.'
-                  )
-
-                  # try again with timestamp instead of forward token
-                  begin
-                    timestamp = state.store[group][stream]['timestamp']
-                    timestamp ||= @event_start_time
-
-                    event_count += process_stream(group,
-                                                  stream,
-                                                  nil,
-                                                  timestamp,
-                                                  state)
-                  rescue StandardError => boom
-                    log.error(
-                      'Unable to retrieve events for stream '\
-                      "#{stream} in group #{group}: "\
-                      "#{boom.inspect}"\
-                    )
-                    metric(:increment, 'api.calls.getlogevents.failed')
-                    sleep @error_interval
-                    next
-                  end
                 rescue StandardError => boom
                   log.error("Unable to retrieve events for stream #{stream} "\
                             "in group #{group}: #{boom.inspect}")
