@@ -267,7 +267,7 @@ module Fluent::Plugin
         begin
           log.info('log_group_name' => group, 'log_stream_name' => stream,
                    'next_token' => param_next_token, 'limit' => @limit_events,
-                   'start_time' => param_start_time, 
+                   'start_time' => param_start_time,
                    'start_from_head' => @oldest_logs_first)
           sleep @get_log_events_interval
           response = @aws.get_log_events(
