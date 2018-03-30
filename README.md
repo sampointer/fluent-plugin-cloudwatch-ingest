@@ -3,6 +3,8 @@
 
 ## Introduction
 
+**I am no longer actively using this plugin and am [looking for maintainers](https://github.com/sampointer/fluent-plugin-cloudwatch-ingest/issues/26). In my experience [Cloudwatch Log Subscriptions](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_ES_Stream.html) are vastly superior to external API consumers, which are subject to limiting and state synchronization issues.**
+
 This gem was created out of frustration with existing solutions for Cloudwatch log ingestion into a Fluentd pipeline. Specifically, it has been designed to support:
 
 * The 0.14.x fluentd plugin API
