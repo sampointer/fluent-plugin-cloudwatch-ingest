@@ -1,5 +1,5 @@
 # Fluentd Cloudwatch Plugin
-[![Circle CI](https://circleci.com/gh/sampointer/fluent-plugin-cloudwatch-ingest.svg?style=shield)](https://circleci.com/gh/sampointer/fluent-plugin-cloudwatch-ingest) [![Gem Version](https://badge.fury.io/rb/fluent-plugin-cloudwatch-ingest.svg)](https://badge.fury.io/rb/fluent-plugin-cloudwatch-ingest) ![](http://ruby-gem-downloads-badge.herokuapp.com/fluent-plugin-cloudwatch-ingest?type=total) [![Join the chat at https://gitter.im/fluent-plugin-cloudwatch-ingest](https://badges.gitter.im/fluent-plugin-cloudwatch-ingest.svg)](https://gitter.im/fluent-plugin-cloudwatch-ingest/Lobby?utm_source=share-link&utm_medium=link&utm_campaign=share-link) [![Dependency Status](https://gemnasium.com/badges/github.com/sampointer/fluent-plugin-cloudwatch-ingest.svg)](https://gemnasium.com/github.com/sampointer/fluent-plugin-cloudwatch-ingest)
+[![Circle CI](https://circleci.com/gh/sampointer/fluent-plugin-cloudwatch-ingest.svg?style=shield)](https://circleci.com/gh/sampointer/fluent-plugin-cloudwatch-ingest) [![Gem Version](https://badge.fury.io/rb/fluent-plugin-cloudwatch-ingest.svg)](https://badge.fury.io/rb/fluent-plugin-cloudwatch-ingest) ![](http://ruby-gem-downloads-badge.herokuapp.com/fluent-plugin-cloudwatch-ingest?type=total) [![Join the chat at https://gitter.im/fluent-plugin-cloudwatch-ingest](https://badges.gitter.im/fluent-plugin-cloudwatch-ingest.svg)](https://gitter.im/fluent-plugin-cloudwatch-ingest/Lobby?utm_source=share-link&utm_medium=link&utm_campaign=share-link)
 
 ## Introduction
 
@@ -44,7 +44,7 @@ Or install it yourself as:
   interval 60
   max_log_streams_per_group 50
   error_interval 5            # Time to wait between error conditions before retry
-  get_log_events_interval 0.0 # Time to pause between get_log_events to reduce throttle error 
+  get_log_events_interval 0.0 # Time to pause between get_log_events to reduce throttle error
   limit_events 10000          # Number of events to fetch in any given iteration
   event_start_time 0          # Do not fetch events before this time (UNIX epoch, miliseconds)
   oldest_logs_first false     # When true fetch the oldest logs first
