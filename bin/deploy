@@ -7,4 +7,5 @@ mkdir -p /home/ubuntu/.gem/
 cp assets/credentials /home/ubuntu/.gem/credentials
 sed -i "s/REPLACEME/${rubygems_api_key}/g" /home/ubuntu/.gem/credentials
 chmod 0600 /home/ubuntu/.gem/credentials
+echo "Pushing ${gem}"
 gem push ${gem}
