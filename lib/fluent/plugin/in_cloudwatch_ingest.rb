@@ -302,12 +302,14 @@ module Fluent::Plugin
         raise # handle as error in run method
       end
 
-      response.events.each do |e|
-        begin
-          emit(e, group, stream)
-          event_count += 1
-        rescue StandardError => boom
-          log.error("Failed to emit event #{e}: #{boom.inspect}")
+      if response.next_forward_token != param_next_token
+        response.events.each do |e|
+          begin
+            emit(e, group, stream)
+            event_count += 1
+          rescue StandardError => boom
+            log.error("Failed to emit event #{e}: #{boom.inspect}")
+          end
         end
       end
 
