@@ -9,7 +9,7 @@ module Fluent
     class CloudwatchIngestParser < RegexpParser
       Plugin.register_parser('cloudwatch_ingest', self)
 
-      config_param :expression, :string, default: '^(?<message>.+)$'
+      config_param :expression, :regexp, default: '^(?<message>.+)$'
       config_param :time_format, :string, default: '%Y-%m-%d %H:%M:%S.%L'
       config_param :event_time, :bool, default: true
       config_param :inject_group_name, :bool, default: true
